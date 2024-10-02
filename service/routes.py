@@ -25,6 +25,8 @@ from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.common import status  # HTTP Status Codes
 
+from service.models import Order
+
 
 ######################################################################
 # GET INDEX
@@ -42,4 +44,19 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
+
 # Todo: Place your REST API code here ...
+@app.route("/orders/<int:orderid>", methods=["GET"])
+def get_order(orderid):
+    """Retrieve a single order"""
+    app.logger.info("Request for Order with id: %s", orderid)
+
+    # See if the account exists and abort if it doesn't
+    order = Order.find(orderid)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{orderid}' could not be found.",
+        )
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
