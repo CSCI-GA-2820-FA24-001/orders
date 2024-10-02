@@ -24,6 +24,7 @@ and Delete YourResourceModel
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.common import status  # HTTP Status Codes
+from service.models import Order
 
 
 ######################################################################
@@ -42,4 +43,19 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
+
 # Todo: Place your REST API code here ...
+@app.route("/orders", methods=["POST"])
+def create_order():
+    """Create an Order"""
+    app.logger.info("Request to create an Order")
+
+    # Create the account
+    account = Order()
+    account.deserialize(request.get_json())
+    account.create()
+
+    # Create a message to return
+    message = account.serialize()
+
+    return jsonify(message), status.HTTP_201_CREATED
