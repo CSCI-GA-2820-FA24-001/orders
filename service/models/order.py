@@ -11,7 +11,7 @@ class Order(db.Model, PersistentBase):
     # Table Schema
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(64), nullable=False)
-    status = db.Column(db.String(32), nullable=False, default="pending")  # 订单状态
+    status = db.Column(db.String(32), nullable=False, default="pending")
     items = db.relationship("Item", backref="order", passive_deletes=True)
 
     def __repr__(self):
