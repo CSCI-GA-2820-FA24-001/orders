@@ -57,5 +57,7 @@ def create_order():
 
     # Create a message to return
     message = account.serialize()
+    # location_url = url_for("get_accounts", account_id=account.id, _external=True)
 
     return jsonify(message), status.HTTP_201_CREATED
+    # return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
