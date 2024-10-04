@@ -1,20 +1,71 @@
+######################################################################
+# Copyright 2016, 2024 John J. Rofrano. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+######################################################################
+# cspell:ignore userid postalcode
 """
 Test Factory to make fake objects for testing
 """
+from datetime import date
+from factory import Factory, SubFactory, Sequence, Faker, post_generation
+from factory.fuzzy import FuzzyChoice, FuzzyDate, FuzzyInteger
+from service.models import Order, Item
 
-import factory
-from service.models import YourResourceModel
+
+class OrderFactory(Factory):
+    """Creates fake Orders"""
+
+    # pylint: disable=too-few-public-methods
+    class Meta:
+        """Persistent class"""
+
+        model = Order
+
+    id = Sequence(lambda n: n)
+    customer_name = Faker("name")
+    status = FuzzyChoice(choices=["Pending approval", "Completed", "In progress"])
+    created_at = FuzzyDate(date(2008, 1, 1))
+    updated_at = FuzzyDate(date(2008, 9, 8))
+    # the many side of relationships can be a little wonky in factory boy:
+    # https://factoryboy.readthedocs.io/en/latest/recipes.html#simple-many-to-many-relationship
+
+    @post_generation
+    def items(
+        self, create, extracted, **kwargs
+    ):  # pylint: disable=method-hidden, unused-argument
+        """Creates the items list"""
+        if not create:
+            return
+
+        if extracted:
+            self.items = extracted
 
 
-class YourResourceModelFactory(factory.Factory):
-    """Creates fake pets that you don't have to feed"""
+class ItemFactory(Factory):
+    """Creates fake Item"""
 
-    class Meta:  # pylint: disable=too-few-public-methods
-        """Maps factory to data model"""
+    # pylint: disable=too-few-public-methods
+    class Meta:
+        """Persistent class"""
 
-        model = YourResourceModel
+        model = Item
 
-    id = factory.Sequence(lambda n: n)
-    name = factory.Faker("first_name")
-
-    # Todo: Add your other attributes here...
+    id = Sequence(lambda n: n)
+    order_id = None
+    product_name = FuzzyChoice(choices=["foo", "bar", "rolls", "cleaner", "hardware"])
+    quantity = FuzzyInteger(1, 5)
+    price = FuzzyInteger(10, 50)
+    created_at = FuzzyDate(date(2008, 1, 1))
+    updated_at = FuzzyDate(date(2008, 9, 8))
+    order = SubFactory(OrderFactory)
