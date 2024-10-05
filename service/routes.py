@@ -24,7 +24,7 @@ and Delete Order
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.common import status  # HTTP Status Codes
-from service.models import Order
+from service.models import Order, Item
 
 
 ######################################################################
@@ -76,3 +76,91 @@ def read_order(order_id):
         )
 
     return jsonify(order.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# ADD AN ITEM TO AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/items", methods=["POST"])
+def create_items(order_id):
+    """
+    Create an Item on an Order
+
+    This endpoint will add an item to an order
+    """
+    app.logger.info("Request to create an Item for Order with id: %s", order_id)
+    check_content_type("application/json")
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    # Create an item from the json data
+    item = Item()
+    item.deserialize(request.get_json())
+
+    # Append the item to the order
+    order.items.append(item)
+    order.update()
+
+    # Prepare a message to return
+    message = item.serialize()
+
+    # Send the location to GET the new item
+
+    # Todo:uncomment this code when get_items is implemented
+    location_url = url_for(
+        "get_items", order_id=order.id, item_id=item.id, _external=True
+    )
+
+    return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+
+
+######################################################################
+# RETRIEVE AN ITEM FROM ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["GET"])
+def get_items(order_id, item_id):
+    """
+    Get an Item
+
+    This endpoint returns just an item
+    """
+    app.logger.info("Request to retrieve Item %s for Order id: %s", (item_id, order_id))
+
+    # See if the item exists and abort if it doesn't
+    item = Item.find(item_id)
+    if not item:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{item_id}' could not be found.",
+        )
+
+    return jsonify(item.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+#  U T I L I T Y   F U N C T I O N S
+######################################################################
+
+
+def check_content_type(content_type):
+    """Checks that the media type is correct"""
+    if "Content-Type" not in request.headers:
+        app.logger.error("No Content-Type specified.")
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"Content-Type must be {content_type}",
+        )
+
+    if request.headers["Content-Type"] == content_type:
+        return
+
+    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
+    )
