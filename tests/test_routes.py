@@ -70,7 +70,6 @@ class TestOrderService(TestCase):
     #  H E L P E R   M E T H O D S
     ######################################################################
 
-    # Uncomment below when create order API is implemented
     def _create_orders(self, count):
         """Factory method to create orders in bulk"""
         orders = []
@@ -92,10 +91,10 @@ class TestOrderService(TestCase):
     #  P L A C E   T E S T   C A S E S   H E R E
     ######################################################################
 
-    # def test_index(self):
-    #     """It should call the home page"""
-    #     resp = self.client.get("/")
-    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
+    def test_index(self):
+        """It should call the home page"""
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_create_order(self):
         """It should Create a new Order"""
@@ -106,8 +105,8 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
         # Make sure location header is set
-        # location = resp.headers.get("Location", None)
-        # self.assertIsNotNone(location)
+        location = resp.headers.get("Location", None)
+        self.assertIsNotNone(location)
 
         # Check the data is correct
         new_order = resp.get_json()
@@ -118,11 +117,11 @@ class TestOrderService(TestCase):
         self.assertEqual(new_order["items"], order.items, "Email does not match")
 
         # Check that the location header was correct by getting it
-        # resp = self.client.get(location, content_type="application/json")
-        # self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        # new_order = resp.get_json()
-        # self.assertEqual(new_order["status"], order.status, "Names does not match")
-        # self.assertEqual(
-        #     new_order["customer_name"], order.customer_name, "Address does not match"
-        # )
-        # self.assertEqual(new_order["items"], order.items, "Email does not match")
+        resp = self.client.get(location, content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        new_order = resp.get_json()
+        self.assertEqual(new_order["status"], order.status, "Names does not match")
+        self.assertEqual(
+            new_order["customer_name"], order.customer_name, "Address does not match"
+        )
+        self.assertEqual(new_order["items"], order.items, "Email does not match")

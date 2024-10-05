@@ -50,14 +50,29 @@ def create_order():
     """Create an Order"""
     app.logger.info("Request to create an Order")
 
-    # Create the account
-    account = Order()
-    account.deserialize(request.get_json())
-    account.create()
+    # Create the order
+    order = Order()
+    order.deserialize(request.get_json())
+    order.create()
 
     # Create a message to return
-    message = account.serialize()
-    # location_url = url_for("get_accounts", account_id=account.id, _external=True)
+    message = order.serialize()
+    location_url = url_for("read_order", order_id=order.id, _external=True)
 
-    return jsonify(message), status.HTTP_201_CREATED
-    # return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+    return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+
+
+@app.route("/orders/<int:order_id>", methods=["GET"])
+def read_order(order_id):
+    """Retrieve a single order"""
+    app.logger.info("Request for Order with id: %s", order_id)
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
