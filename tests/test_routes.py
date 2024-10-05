@@ -70,23 +70,22 @@ class TestOrderService(TestCase):
     #  H E L P E R   M E T H O D S
     ######################################################################
 
-# Uncomment below when create order API is implemented
-    # def _create_orders(self, count):
-    #     """Factory method to create orders in bulk"""
-    #     orders = []
-    #     for _ in range(count):
-    #         order = OrderFactory()
-    #         print(order)
-    #         resp = self.client.post(BASE_URL, json=order.serialize())
-    #         self.assertEqual(
-    #             resp.status_code,
-    #             status.HTTP_201_CREATED,
-    #             "Could not create test Order",
-    #         )
-    #         new_order = resp.get_json()
-    #         order.id = new_order["id"]
-    #         orders.append(order)
-    #     return orders
+    def _create_orders(self, count):
+        """Factory method to create orders in bulk"""
+        orders = []
+        for _ in range(count):
+            order = OrderFactory()
+            print(order)
+            resp = self.client.post(BASE_URL, json=order.serialize())
+            self.assertEqual(
+                resp.status_code,
+                status.HTTP_201_CREATED,
+                "Could not create test Order",
+            )
+            new_order = resp.get_json()
+            order.id = new_order["id"]
+            orders.append(order)
+        return orders
 
     ######################################################################
     #  P L A C E   T E S T   C A S E S   H E R E
@@ -96,3 +95,48 @@ class TestOrderService(TestCase):
         """It should call the home page"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_create_order(self):
+        """It should Create a new Order"""
+        order = OrderFactory()
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = resp.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_order = resp.get_json()
+        self.assertEqual(new_order["status"], order.status, "status does not match")
+        self.assertEqual(
+            new_order["customer_name"],
+            order.customer_name,
+            "customer_name does not match",
+        )
+        self.assertEqual(new_order["items"], order.items, "items does not match")
+
+        # Check that the location header was correct by getting it
+        resp = self.client.get(location, content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        new_order = resp.get_json()
+        self.assertEqual(new_order["status"], order.status, "status does not match")
+        self.assertEqual(
+            new_order["customer_name"],
+            order.customer_name,
+            "customer_name does not match",
+        )
+        self.assertEqual(new_order["items"], order.items, "items does not match")
+
+    def test_read_order(self):
+        """It should Read a single Order"""
+        # get the id of an order
+        order = self._create_orders(1)[0]
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}", content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["customer_name"], order.customer_name)
