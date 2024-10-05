@@ -125,3 +125,14 @@ class TestOrderService(TestCase):
             new_order["customer_name"], order.customer_name, "Address does not match"
         )
         self.assertEqual(new_order["items"], order.items, "Email does not match")
+
+    def test_read_order(self):
+        """It should Read a single Order"""
+        # get the id of an order
+        order = self._create_orders(1)[0]
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}", content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["customer_name"], order.customer_name)
