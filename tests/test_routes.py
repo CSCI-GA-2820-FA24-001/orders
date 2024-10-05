@@ -110,21 +110,25 @@ class TestOrderService(TestCase):
 
         # Check the data is correct
         new_order = resp.get_json()
-        self.assertEqual(new_order["status"], order.status, "Names does not match")
+        self.assertEqual(new_order["status"], order.status, "status does not match")
         self.assertEqual(
-            new_order["customer_name"], order.customer_name, "Address does not match"
+            new_order["customer_name"],
+            order.customer_name,
+            "customer_name does not match",
         )
-        self.assertEqual(new_order["items"], order.items, "Email does not match")
+        self.assertEqual(new_order["items"], order.items, "items does not match")
 
         # Check that the location header was correct by getting it
         resp = self.client.get(location, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_order = resp.get_json()
-        self.assertEqual(new_order["status"], order.status, "Names does not match")
+        self.assertEqual(new_order["status"], order.status, "status does not match")
         self.assertEqual(
-            new_order["customer_name"], order.customer_name, "Address does not match"
+            new_order["customer_name"],
+            order.customer_name,
+            "customer_name does not match",
         )
-        self.assertEqual(new_order["items"], order.items, "Email does not match")
+        self.assertEqual(new_order["items"], order.items, "items does not match")
 
     def test_read_order(self):
         """It should Read a single Order"""
