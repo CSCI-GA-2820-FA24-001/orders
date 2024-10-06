@@ -24,7 +24,7 @@ import logging
 from unittest import TestCase
 from wsgi import app
 from service.models import Order, DataValidationError, db
-from .factories import OrderFactory
+from .factories import OrderFactory, ItemFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
