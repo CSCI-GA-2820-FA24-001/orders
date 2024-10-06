@@ -26,6 +26,8 @@ from flask import current_app as app  # Import Flask application
 from service.common import status  # HTTP Status Codes
 from service.models import Order
 
+# from .persistent_base import db
+
 
 ######################################################################
 # GET INDEX
@@ -76,3 +78,21 @@ def read_order(order_id):
         )
 
     return jsonify(order.serialize()), status.HTTP_200_OK
+
+
+@app.route("/orders/<int:order_id>", methods=["DELETE"])
+def delete_order(order_id):
+    """Delete an entire order"""
+    app.logger.info("Request to delete an entire order with order id: %s", order_id)
+
+    # See if the order first exists
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with order id '{order_id}' is not found and hence cannot be deleted",
+        )
+    if order:
+        Order.delete(order)
+
+    return "", status.HTTP_204_NO_CONTENT

@@ -25,7 +25,7 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Order
-from tests.factories import OrderFactory, ItemFactory
+from tests.factories import OrderFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -140,3 +140,10 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["customer_name"], order.customer_name)
+
+    def test_delete_order(self):
+        """It should Delete an entire order by order id"""
+        order = self._create_orders(1)[0]
+        resp = self.client.delete(f"{BASE_URL}/{order.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        print("Success")
