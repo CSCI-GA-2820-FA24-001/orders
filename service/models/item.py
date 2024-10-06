@@ -33,7 +33,6 @@ class Item(db.Model, PersistentBase):
     def deserialize(self, data):
         """Populates an Item from a dictionary"""
         try:
-            self.id = data["id"]
             self.order_id = data["order_id"]
             self.product_name = data["product_name"]
             self.quantity = data["quantity"]

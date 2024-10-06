@@ -31,7 +31,6 @@ class Order(db.Model, PersistentBase):
     def deserialize(self, data):
         """Populates an Order from a dictionary"""
         try:
-            self.id = data["id"]
             self.customer_name = data["customer_name"]
             self.status = data["status"]
             self.created_at = data["created_at"]

@@ -163,18 +163,11 @@ class TestOrder(TestCase):
     def test_deserialize_an_order(self):
         """It should Deserialize an order"""
         order = OrderFactory()
-        print("order from order factory")
-        print(order)
         order.items.append(ItemFactory())
         order.create()
         serial_order = order.serialize()
         new_order = Order()
-        
         new_order.deserialize(serial_order)
-        print("deserialized order from order factory")
-        print(new_order)
-
-        self.assertEqual(new_order.id, order.id)
         self.assertEqual(new_order.customer_name, order.customer_name)
         self.assertEqual(new_order.status, order.status)
         self.assertEqual(new_order.created_at, order.created_at.isoformat())
