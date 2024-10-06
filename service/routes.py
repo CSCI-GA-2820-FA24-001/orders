@@ -24,7 +24,7 @@ and Delete Order
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.common import status  # HTTP Status Codes
-from service.models import Order
+from service.models import Order, Item
 
 
 ######################################################################
@@ -76,3 +76,67 @@ def read_order(order_id):
         )
 
     return jsonify(order.serialize()), status.HTTP_200_OK
+
+######################################################################
+    # UPDATE AN ORDER
+######################################################################
+
+@app.route("/orders/<int:order_id>", methods=["PUT"])
+def update_order(order_id):
+    """Updates an order"""
+    app.logger.info(f"Request to update order id:{order_id}")
+
+    #Check if order exists
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found."
+        )
+
+    # Update order with info in the json request
+    app.logger.debug("Payload = %s", api.payload)
+
+    data = api.payload
+    order.deserialize(data)
+    
+    order.id = order_id
+    order.update()
+    return order.serialize(), status.HTTP_200_OK
+
+
+######################################################################
+    # UPDATE AN ITEM IN AN ORDER
+######################################################################
+
+@app.route("/orders/<int:order_id>/items/<int:item_id", methods=["PUT"])
+def update_item_order(order_id, item_id):
+    """Updates an item in an order"""
+    app.logger.info(f"Request to update order id:{order_id}")
+
+    #Check if order exists
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND, 
+            f"Order with id '{order_id}' was not found."
+        )
+    
+    #Check if item exists
+    item = Item.find(item_id)
+    if not item:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Item with id '{item_id}' within order withing could not be found.",
+        )
+    
+    # Update item with info in the json request
+    app.logger.debug("Payload = %s", api.payload)
+    data = api.payload
+    item.deserialize(data)
+    item.id = item_id
+    item.order_id = order_id
+    item.update()
+
+    return item.serialize(), status.HTTP_200_OK
+
+
