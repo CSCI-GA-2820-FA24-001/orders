@@ -19,6 +19,7 @@ TestOrder API Service Test Suite
 """
 
 # pylint: disable=duplicate-code
+from datetime import datetime
 import os
 import logging
 from unittest import TestCase
@@ -140,3 +141,70 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["customer_name"], order.customer_name)
+
+    def test_add_item(self):
+        """It should add an item to an order"""
+        order = self._create_orders(1)[0]
+        now = datetime.utcnow()
+        item = ItemFactory(
+            order_id=order.id,
+            created_at=now,
+            updated_at=now,
+        )
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = resp.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        data = resp.get_json()
+        logging.debug(data)
+        self.assertEqual(data["order_id"], item.order_id)
+        self.assertEqual(data["product_name"], item.product_name)
+        self.assertEqual(data["quantity"], item.quantity)
+        self.assertEqual(float(data["price"]), float(item.price))
+
+        # Parse the datetime strings
+        returned_created_at = datetime.strptime(
+            data["created_at"], "%Y-%m-%dT%H:%M:%S.%f"
+        )
+        returned_updated_at = datetime.strptime(
+            data["updated_at"], "%Y-%m-%dT%H:%M:%S.%f"
+        )
+
+        # Zero out microseconds
+        returned_created_at = returned_created_at.replace(microsecond=0)
+        returned_updated_at = returned_updated_at.replace(microsecond=0)
+        item_created_at = item.created_at.replace(microsecond=0)
+        item_updated_at = item.updated_at.replace(microsecond=0)
+
+        # Compare the timestamps
+        self.assertEqual(returned_created_at, item_created_at)
+        self.assertEqual(returned_updated_at, item_updated_at)
+
+        # Uncomment when get item is implemented
+        # Check that the location header was correct by getting it
+        # resp = self.client.get(location, content_type="application/json")
+        # self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # new_item = resp.get_json()
+        # self.assertEqual(new_item["order_id"], item.order_id)
+        # self.assertEqual(new_item["product_name"], item.product_name)
+        # self.assertEqual(new_item["quantity"], item.quantity)
+        # self.assertEqual(float(new_item["price"]), float(item.price))
+
+        # # Parse and zero out microseconds
+        # returned_created_at = datetime.strptime(
+        #     new_item["created_at"], "%Y-%m-%dT%H:%M:%S.%f"
+        # ).replace(microsecond=0)
+        # returned_updated_at = datetime.strptime(
+        #     new_item["updated_at"], "%Y-%m-%dT%H:%M:%S.%f"
+        # ).replace(microsecond=0)
+
+        # # Compare the timestamps
+        # self.assertEqual(returned_created_at, item_created_at)
+        # self.assertEqual(returned_updated_at, item_updated_at)
