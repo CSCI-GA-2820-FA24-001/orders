@@ -146,4 +146,3 @@ class TestOrderService(TestCase):
         order = self._create_orders(1)[0]
         resp = self.client.delete(f"{BASE_URL}/{order.id}")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
-        print("Success")
