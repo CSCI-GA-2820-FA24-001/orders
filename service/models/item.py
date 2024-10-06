@@ -25,7 +25,7 @@ class Item(db.Model, PersistentBase):
             "order_id": self.order_id,
             "product_name": self.product_name,
             "quantity": self.quantity,
-            "price": str(self.price),
+            "price": self.price,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
@@ -33,9 +33,13 @@ class Item(db.Model, PersistentBase):
     def deserialize(self, data):
         """Populates an Item from a dictionary"""
         try:
+            self.id = data["id"]
+            self.order_id = data["order_id"]
             self.product_name = data["product_name"]
             self.quantity = data["quantity"]
             self.price = data["price"]
+            self.created_at = data["created_at"]
+            self.updated_at = data["updated_at"]
         except AttributeError as error:
             raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:

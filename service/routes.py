@@ -43,8 +43,6 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-
-# Todo: Place your REST API code here ...
 @app.route("/orders", methods=["POST"])
 def create_order():
     """Create an Order"""
@@ -76,3 +74,45 @@ def read_order(order_id):
         )
 
     return jsonify(order.serialize()), status.HTTP_200_OK
+
+######################################################################
+# LIST ALL ORDERS
+######################################################################
+@app.route("/orders", methods=["GET"])
+def list_accounts():
+    """Returns all of the Orders"""
+    app.logger.info("Request for Order list")
+    orders = []
+
+    # Process the query string if any
+    name = request.args.get("name")
+    if name:
+        orders = Order.find_by_name(name)
+    else:
+        orders = Order.all()
+
+    # Return as an array of dictionaries
+    results = [order.serialize() for order in orders]
+
+    return jsonify(results), status.HTTP_200_OK
+
+######################################################################
+# LIST ITEMS IN AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/items", methods=["GET"])
+def list_items_in_order(order_id):
+    """Returns all of the Items for an Order"""
+    app.logger.info("Request for all Items for Order with id: %s", order_id)
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    # Get the items for the order
+    results = [item.serialize() for item in order.items]
+
+    return jsonify(results), status.HTTP_200_OK

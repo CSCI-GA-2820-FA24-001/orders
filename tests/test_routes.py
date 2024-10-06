@@ -26,6 +26,7 @@ from wsgi import app
 from service.common import status
 from service.models import db, Order
 from tests.factories import OrderFactory, ItemFactory
+from factory import Faker
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -75,6 +76,7 @@ class TestOrderService(TestCase):
         orders = []
         for _ in range(count):
             order = OrderFactory()
+            ## To-do: remove debug log once all testing is done
             print(order)
             resp = self.client.post(BASE_URL, json=order.serialize())
             self.assertEqual(
@@ -140,3 +142,72 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["customer_name"], order.customer_name)
+
+    def test_read_order_not_found(self):
+        """It should not Read an Order that is not found"""
+        resp = self.client.get(f"{BASE_URL}/0")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_order_list(self):
+        """It should Get a list of Orders"""
+        self._create_orders(5)
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_get_order_list_empty(self):
+        """It should Get an empty list of Orders when no order is present"""
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+
+    def test_get_order_by_name(self):
+        """It should Get an Order by customer name"""
+        orders = self._create_orders(3)
+        resp = self.client.get(BASE_URL, query_string=f"customer_name={orders[0].customer_name}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data[0]["customer_name"], orders[0].customer_name)
+
+    def test_get_order_by_name_empty(self):
+        """It should not Get an empty list of Orders for customer_name that does not exist in db"""
+        customer_name = Faker("name")
+        resp = self.client.get(BASE_URL, query_string=f"customer_name={customer_name}")
+        print(resp)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+
+    ######################################################################
+    #  I T E M S  I N  A N  O R D E R   T E S T   C A S E S
+    ######################################################################
+
+    ## Uncomment below when CREATE_ITEM_IN_ORDER is implemented
+    # def test_get_items_in_list(self):
+    #     """It should Get a list of Items in an order with order_id"""
+    #     # add two items to order
+    #     order = self._create_orders(1)[0]
+    #     item_list = ItemFactory.create_batch(2)
+
+    #     # Create item 1
+    #     resp = self.client.post(
+    #         f"{BASE_URL}/{order.id}/items", json=item_list[0].serialize()
+    #     )
+    #     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+    #     # Create item 2
+    #     resp = self.client.post(
+    #         f"{BASE_URL}/{order.id}/items", json=item_list[1].serialize()
+    #     )
+    #     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+    #     # get the list back and make sure there are 2
+    #     resp = self.client.get(f"{BASE_URL}/{order.id}/items")
+    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    #     data = resp.get_json()
+    #     self.assertEqual(len(data), 2)
+    #     self.assertEqual(data[0]["id"], item_list[0]["id"])
+    #     self.assertEqual(data[1]["id"], item_list[1]["id"])

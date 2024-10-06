@@ -31,8 +31,11 @@ class Order(db.Model, PersistentBase):
     def deserialize(self, data):
         """Populates an Order from a dictionary"""
         try:
+            self.id = data["id"]
             self.customer_name = data["customer_name"]
             self.status = data["status"]
+            self.created_at = data["created_at"]
+            self.updated_at = data["updated_at"]
             item_list = data.get("items", [])
             for item_data in item_list:
                 item = Item()
@@ -50,3 +53,13 @@ class Order(db.Model, PersistentBase):
             ) from error
 
         return self
+
+    @classmethod
+    def find_by_name(cls, name):
+        """Returns all Orders with the given customer name
+
+        Args:
+            name (string): the name of the customer whose orders you want
+        """
+        logger.info("Processing customer name query for %s ...", name)
+        return cls.query.filter(cls.customer_name == name)
