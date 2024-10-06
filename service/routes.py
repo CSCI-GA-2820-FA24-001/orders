@@ -79,7 +79,7 @@ def read_order(order_id):
 # LIST ALL ORDERS
 ######################################################################
 @app.route("/orders", methods=["GET"])
-def list_accounts():
+def list_orders():
     """Returns all of the Orders"""
     app.logger.info("Request for Order list")
     orders = []
