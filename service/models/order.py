@@ -38,6 +38,8 @@ class Order(db.Model, PersistentBase):
                 item = Item()
                 item.deserialize(item_data)
                 self.items.append(item)
+            self.created_at = data["created_at"]
+            self.updated_at = data["updated_at"]
         except AttributeError as error:
             raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:
@@ -50,3 +52,12 @@ class Order(db.Model, PersistentBase):
             ) from error
 
         return self
+
+    @classmethod
+    def find_by_name(cls, name):
+        """Returns all Orders with the given customer name
+        Args:
+            name (string): the name of the customer whose orders you want
+        """
+        logger.info("Processing customer name query for %s ...", name)
+        return cls.query.filter(cls.customer_name == name)

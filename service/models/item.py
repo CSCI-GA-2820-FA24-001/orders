@@ -25,7 +25,7 @@ class Item(db.Model, PersistentBase):
             "order_id": self.order_id,
             "product_name": self.product_name,
             "quantity": self.quantity,
-            "price": str(self.price),
+            "price": self.price,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
