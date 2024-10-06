@@ -73,7 +73,5 @@ class TestOrder(TestCase):
         self.assertIsNotNone(resource.id)
         found = Order.all()
         self.assertEqual(len(found), 1)
-        # data = Order.find(resource.id)
-        # self.assertEqual(data.name, resource.name)
 
     # Todo: Add your test cases here...
