@@ -140,3 +140,29 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["customer_name"], order.customer_name)
+
+    
+    def test_update_order(self):
+        """It should update an existing Order"""
+
+        # Create an order to update
+        order = self._create_orders(1)[0]
+        
+        # Define new data for the order
+        updated_data = {
+            "customer_name": "John Doe"
+        }
+        
+        # Send a PUT request to update the order
+        resp = self.client.put(
+            f"{BASE_URL}/orders/{order.id}", 
+            json=updated_data, 
+            content_type="application/json"
+        )
+    
+        # Verify response code
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify the updated data in the response
+        data = resp.get_json()
+        self.assertEqual(data["customer_name"], updated_data["customer_name"])
