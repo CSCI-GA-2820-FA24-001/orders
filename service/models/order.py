@@ -38,8 +38,6 @@ class Order(db.Model, PersistentBase):
                 item = Item()
                 item.deserialize(item_data)
                 self.items.append(item)
-            self.created_at = data["created_at"]
-            self.updated_at = data["updated_at"]
         except AttributeError as error:
             raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:

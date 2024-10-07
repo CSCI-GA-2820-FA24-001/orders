@@ -111,5 +111,3 @@ class TestItem(TestCase):
         self.assertEqual(new_item.product_name, item.product_name)
         self.assertEqual(new_item.quantity, item.quantity)
         self.assertEqual(new_item.price, item.price)
-        self.assertEqual(new_item.created_at, item.created_at.isoformat())
-        self.assertEqual(new_item.updated_at, item.updated_at.isoformat())
