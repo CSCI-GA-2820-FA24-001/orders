@@ -145,28 +145,32 @@ class TestOrderService(TestCase):
     
     def test_update_order(self):
         """It should update an existing Order"""
-
         # Create an order to update
         order = self._create_orders(1)[0]
         
-        # Define new data for the order
-        updated_data = {
-            "customer_name": "John Doe"
-        }
-        
+        # POST request to create the order
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        new_order = resp.get_json()
+        new_order["customer_name"] = "John Doe"
+        new_order_id = new_order["id"]
+
+
         # Send a PUT request to update the order
         resp = self.client.put(
-            f"{BASE_URL}/orders/{order.id}", 
-            json=updated_data, 
+            f"{BASE_URL}/{new_order_id}", 
+            json=new_order, 
             content_type="application/json"
         )
-    
-        # Verify response code
+
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-        # Verify the updated data in the response
-        data = resp.get_json()
-        self.assertEqual(data["customer_name"], updated_data["customer_name"])
+        updated_order = resp.get_json()
+        self.assertEqual(updated_order["customer_name"], "John Doe")
+
 
         
     def test_add_item(self):
