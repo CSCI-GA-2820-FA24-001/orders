@@ -77,7 +77,37 @@ def read_order(order_id):
 
     return jsonify(order.serialize()), status.HTTP_200_OK
 
+  
+######################################################################
+    # UPDATE AN ORDER
+######################################################################
 
+@app.route("/orders/<int:order_id>", methods=["PUT"])
+def update_order(order_id):
+    """Updates an order"""
+    app.logger.info(f"Request to update order id:{order_id}")
+    print("Called1")
+    #Check if order exists
+    print("Called2")
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found."
+        )
+    print("Called3")
+    # Update order with info in the json request
+    data = request.get_json()
+    app.logger.debug("Payload received for update: %s", data)
+
+    data = request.get_json()
+    order.deserialize(data)
+    order.id = order_id
+    if(order):
+        Order.update(order)
+    # Return the updated order
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
+  
 ######################################################################
 # ADD AN ITEM TO AN ORDER
 ######################################################################
@@ -164,3 +194,4 @@ def check_content_type(content_type):
     abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
+
