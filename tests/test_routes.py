@@ -27,6 +27,7 @@ from wsgi import app
 from service.common import status
 from service.models import db, Order
 from tests.factories import OrderFactory, ItemFactory
+from factory import Faker
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -142,6 +143,11 @@ class TestOrderService(TestCase):
         data = resp.get_json()
         self.assertEqual(data["customer_name"], order.customer_name)
 
+    def test_read_order_not_found(self):
+        """It should not Read an Order that is not found"""
+        resp = self.client.get(f"{BASE_URL}/0")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_add_item(self):
         """It should add an item to an order"""
         order = self._create_orders(1)[0]
@@ -187,7 +193,6 @@ class TestOrderService(TestCase):
         self.assertEqual(returned_created_at, item_created_at)
         self.assertEqual(returned_updated_at, item_updated_at)
 
-        # Uncomment when get item is implemented
         # Check that the location header was correct by getting it
         resp = self.client.get(location, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -261,3 +266,37 @@ class TestOrderService(TestCase):
         # Compare the timestamps
         self.assertEqual(returned_created_at, item_created_at)
         self.assertEqual(returned_updated_at, item_updated_at)
+
+    
+
+    def test_get_order_list(self):
+        """It should Get a list of Orders"""
+        self._create_orders(5)
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_get_order_list_empty(self):
+        """It should Get an empty list of Orders when no order is present"""
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+
+    def test_get_order_by_name(self):
+        """It should Get an Order by customer name"""
+        orders = self._create_orders(3)
+        resp = self.client.get(BASE_URL, query_string=f"customer_name={orders[0].customer_name}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data[0]["customer_name"], orders[0].customer_name)
+
+    def test_get_order_by_name_empty(self):
+        """It should not Get an empty list of Orders for customer_name that does not exist in db"""
+        customer_name = Faker("name")
+        resp = self.client.get(BASE_URL, query_string=f"customer_name={customer_name}")
+        print(resp)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
