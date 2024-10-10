@@ -96,6 +96,26 @@ def list_orders():
 
     return jsonify(results), status.HTTP_200_OK
 
+######################################################################
+# LIST ITEMS IN AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/items", methods=["GET"])
+def list_items_in_order(order_id):
+    """Returns all of the Items for an Order"""
+    app.logger.info("Request for all Items for Order with id: %s", order_id)
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    # Get the items for the order
+    results = [item.serialize() for item in order.items]
+
+    return jsonify(results), status.HTTP_200_OK
 
 ######################################################################
 # ADD AN ITEM TO AN ORDER
