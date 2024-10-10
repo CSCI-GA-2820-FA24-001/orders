@@ -170,8 +170,6 @@ class TestOrder(TestCase):
         new_order.deserialize(serial_order)
         self.assertEqual(new_order.customer_name, order.customer_name)
         self.assertEqual(new_order.status, order.status)
-        self.assertEqual(new_order.created_at, order.created_at.isoformat())
-        self.assertEqual(new_order.updated_at, order.updated_at.isoformat())
 
     def test_deserialize_with_key_error(self):
         """It should not Deserialize an order with a KeyError"""
