@@ -267,8 +267,6 @@ class TestOrderService(TestCase):
         self.assertEqual(returned_created_at, item_created_at)
         self.assertEqual(returned_updated_at, item_updated_at)
 
-    
-
     def test_get_order_list(self):
         """It should Get a list of Orders"""
         self._create_orders(5)
@@ -287,7 +285,9 @@ class TestOrderService(TestCase):
     def test_get_order_by_name(self):
         """It should Get an Order by customer name"""
         orders = self._create_orders(3)
-        resp = self.client.get(BASE_URL, query_string=f"customer_name={orders[0].customer_name}")
+        resp = self.client.get(
+            BASE_URL, query_string=f"customer_name={orders[0].customer_name}"
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data[0]["customer_name"], orders[0].customer_name)
@@ -327,3 +327,14 @@ class TestOrderService(TestCase):
         self.assertEqual(len(data), 2)
         self.assertEqual(data[0]["product_name"], item_list[0].product_name)
         self.assertEqual(data[1]["product_name"], item_list[1].product_name)
+
+    def test_delete_order(self):
+        """It should Delete an entire order by order id"""
+        order = self._create_orders(1)[0]
+        resp = self.client.delete(f"{BASE_URL}/{order.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_order_by_orderid_empty(self):
+        """It should return an error code when you try to delete an order which does not exist"""
+        resp = self.client.delete(f"{BASE_URL}/0")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)

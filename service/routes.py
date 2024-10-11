@@ -47,6 +47,7 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
+
 @app.route("/orders", methods=["POST"])
 def create_order():
     """Create an Order"""
@@ -79,6 +80,7 @@ def read_order(order_id):
 
     return jsonify(order.serialize()), status.HTTP_200_OK
 
+
 ######################################################################
 # LIST ALL ORDERS
 ######################################################################
@@ -100,6 +102,7 @@ def list_orders():
 
     return jsonify(results), status.HTTP_200_OK
 
+
 ######################################################################
 # LIST ITEMS IN AN ORDER
 ######################################################################
@@ -120,6 +123,7 @@ def list_items_in_order(order_id):
     results = [item.serialize() for item in order.items]
 
     return jsonify(results), status.HTTP_200_OK
+
 
 ######################################################################
 # ADD AN ITEM TO AN ORDER
@@ -207,3 +211,26 @@ def check_content_type(content_type):
     abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
+
+
+######################################################################
+# DELETE AN ORDER WITH ORDER ID
+######################################################################
+
+
+@app.route("/orders/<int:order_id>", methods=["DELETE"])
+def delete_order(order_id):
+    """Delete an entire order"""
+    app.logger.info("Request to delete an entire order with order id: %s", order_id)
+
+    # See if the order first exists
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with order id '{order_id}' is not found and hence cannot be deleted",
+        )
+    if order:
+        Order.delete(order)
+
+    return "", status.HTTP_204_NO_CONTENT
