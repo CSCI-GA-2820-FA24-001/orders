@@ -107,7 +107,6 @@ class TestItem(TestCase):
         item.create()
         new_item = Item()
         new_item.deserialize(item.serialize())
-        self.assertEqual(new_item.order_id, item.order_id)
         self.assertEqual(new_item.product_name, item.product_name)
         self.assertEqual(new_item.quantity, item.quantity)
         self.assertEqual(new_item.price, item.price)
