@@ -126,20 +126,18 @@ def list_items_in_order(order_id):
 
 
 ######################################################################
-    # UPDATE AN ORDER
+# UPDATE AN ORDER
 ######################################################################
 @app.route("/orders/<int:order_id>", methods=["PUT"])
 def update_order(order_id):
     """Updates an order"""
     app.logger.info(f"Request to update order id:{order_id}")
     print("Called1")
-    #Check if order exists
+    # Check if order exists
     print("Called2")
     order = Order.find(order_id)
     if not order:
-        abort(
-            status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found."
-        )
+        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
     print("Called3")
     # Update order with info in the json request
     data = request.get_json()
@@ -148,12 +146,45 @@ def update_order(order_id):
     data = request.get_json()
     order.deserialize(data)
     order.id = order_id
-    if(order):
+    if order:
         Order.update(order)
     # Return the updated order
     return jsonify(order.serialize()), status.HTTP_200_OK
 
-  
+
+######################################################################
+# UPDATE AN ITEM IN AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["PUT"])
+def update_item_order(order_id, item_id):
+    """Updates an order"""
+    app.logger.info(
+        f"Request to update item {item_id} in order with order id:{order_id}"
+    )
+    # Check if order exists
+    order = Order.find(order_id)
+    if not order:
+        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+
+    # Check if item exists
+    item = Item.find(item_id)
+    if not item:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{item_id}' could not be found.",
+        )
+
+    # Update item with info in the json request
+    data = request.get_json()
+    app.logger.debug("Payload received for update: %s", data)
+    item.deserialize(data)
+    item.id = item_id
+    if item:
+        Item.update(item)
+    # Return the updated order
+    return jsonify(item.serialize()), status.HTTP_200_OK
+
+
 ######################################################################
 # ADD AN ITEM TO AN ORDER
 ######################################################################
