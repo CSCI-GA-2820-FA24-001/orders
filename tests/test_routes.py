@@ -142,13 +142,12 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["customer_name"], order.customer_name)
-        
-    
+
     def test_update_order(self):
         """It should update an existing Order"""
         # Create an order to update
         order = self._create_orders(1)[0]
-        
+
         # POST request to create the order
         resp = self.client.post(
             BASE_URL, json=order.serialize(), content_type="application/json"
@@ -161,9 +160,9 @@ class TestOrderService(TestCase):
 
         # Send a PUT request to update the order
         resp = self.client.put(
-            f"{BASE_URL}/{new_order_id}", 
-            json=new_order, 
-            content_type="application/json"
+            f"{BASE_URL}/{new_order_id}",
+            json=new_order,
+            content_type="application/json",
         )
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -175,7 +174,7 @@ class TestOrderService(TestCase):
         """It should not Read an Order that is not found"""
         resp = self.client.get(f"{BASE_URL}/0")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-    
+
     def test_add_item(self):
         """It should add an item to an order"""
         order = self._create_orders(1)[0]
@@ -366,3 +365,45 @@ class TestOrderService(TestCase):
         """It should return an error code when you try to delete an order which does not exist"""
         resp = self.client.delete(f"{BASE_URL}/0")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_item(self):
+        """It should update an item in an existing Order"""
+        # Create an order to update
+        order = self._create_orders(1)[0]
+
+        # POST request to create the order
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        now = datetime.utcnow()
+        item = ItemFactory(
+            order_id=order.id,
+            created_at=now,
+            updated_at=now,
+        )
+
+        # POST request to create an item
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        new_item = resp.get_json()
+        new_item["quantity"] = 10
+        new_item_id = new_item["id"]
+
+        # Send a PUT request to update the order
+        resp = self.client.put(
+            f"{BASE_URL}/{order.id}/items/{new_item_id}",
+            json=new_item,
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        updated_item = resp.get_json()
+        self.assertEqual(updated_item["quantity"], 10)
