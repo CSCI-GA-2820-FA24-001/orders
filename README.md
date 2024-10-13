@@ -42,7 +42,7 @@ tests/                     - test cases package
 └── test_routes.py         - test suite for order service routes
 ```
 ## Information about this repo
-These are the RESTful endpoints for orders and items
+``` These are the RESTful endpoints for orders and items
 
 Endpoint          Methods  Rule
 ----------------  -------  -----------------------------------------------------
@@ -59,7 +59,7 @@ create_items      POST     /orders/<int:order_id>/items
 get_items         GET      /orders/<int:order_id>/items/<int:item_id>
 update_items      PUT      /orders/<int:order_id>/items/<int:item_id>
 delete_items      DELETE   /orders/<int:order_id>/items/<int:item_id>
-
+```
 ## License
 
 Copyright (c) 2016, 2024 [John Rofrano](https://www.linkedin.com/in/JohnRofrano/). All rights reserved.
