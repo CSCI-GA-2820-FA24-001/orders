@@ -38,8 +38,8 @@ class Order(db.Model, PersistentBase):
                 item = Item()
                 item.deserialize(item_data)
                 self.items.append(item)
-        except AttributeError as error:
-            raise DataValidationError("Invalid attribute: " + error.args[0]) from error
+        # except AttributeError as error:
+        #     raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:
             raise DataValidationError(
                 "Invalid Order: missing " + error.args[0]

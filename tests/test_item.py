@@ -24,6 +24,7 @@ from unittest import TestCase
 from wsgi import app
 from service.models import Order, Item, db
 from tests.factories import OrderFactory, ItemFactory
+from service.models import DataValidationError
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
@@ -115,3 +116,15 @@ class TestItem(TestCase):
         item = ItemFactory()
         self.assertIn(str(item.id), repr(item))
         self.assertIn(item.product_name, repr(item))
+
+    def test_update_item_not_found(self):
+        """It should not Update an Item that's not found"""
+        item = ItemFactory()
+        item.id = 0  # Set to an ID that doesn't exist
+        self.assertRaises(DataValidationError, item.update)
+
+    def test_delete_item_not_found(self):
+        """It should not Delete an Item that's not found"""
+        item = ItemFactory()
+        item.id = 0  # Set to an ID that doesn't exist
+        self.assertRaises(DataValidationError, item.delete)
