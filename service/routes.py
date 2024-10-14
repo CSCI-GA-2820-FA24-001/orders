@@ -294,3 +294,22 @@ def delete_order(order_id):
         Order.delete(order)
 
     return "", status.HTTP_204_NO_CONTENT
+
+
+######################################################################
+# DELETE AN ITEM FROM AN ORDER
+######################################################################
+
+
+@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["DELETE"])
+def delete_item_from_order(order_id, item_id):
+    """Delete an item from an order"""
+    app.logger.info("Request to delete Item %s from Order id: %s", (item_id, order_id))
+    item = Item.find(item_id)
+    if not item:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Item with id '{item_id}' could not be found.",
+        )
+    item.delete()
+    return "", status.HTTP_204_NO_CONTENT
