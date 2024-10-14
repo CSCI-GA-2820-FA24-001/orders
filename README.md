@@ -42,7 +42,7 @@ tests/                     - test cases package
 └── test_routes.py         - test suite for order service routes
 ```
 ## Information about this repo
-These are the RESTful endpoints for orders and items
+``` These are the RESTful endpoints for orders and items
 
 Endpoint          Methods  Rule
 ----------------  -------  -----------------------------------------------------
@@ -59,6 +59,31 @@ create_items      POST     /orders/<int:order_id>/items
 get_items         GET      /orders/<int:order_id>/items/<int:item_id>
 update_items      PUT      /orders/<int:order_id>/items/<int:item_id>
 delete_items      DELETE   /orders/<int:order_id>/items/<int:item_id>
+```
+### create_order & update_order input JSON format
+```
+{
+  "customer_name": "string",
+  "status": "string",
+  "items": [
+    {
+      "product_name": "string",
+      "quantity": "int",
+      "price": "float"
+    },
+    ...
+  ]
+}
+```
+
+### create_items & update_items input JSON format
+```
+{
+  "product_name": "string",
+  "quantity": "int",
+  "price": "float"
+}
+```
 
 ## License
 
