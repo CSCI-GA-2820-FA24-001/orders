@@ -88,7 +88,6 @@ class TestItem(TestCase):
         self.assertEqual(len(new_order.items), 2)
         self.assertEqual(new_order.items[1].product_name, item2.product_name)
 
-
     def test_serialize_an_item(self):
         """It should serialize an Item"""
         item = ItemFactory()
@@ -110,3 +109,9 @@ class TestItem(TestCase):
         self.assertEqual(new_item.product_name, item.product_name)
         self.assertEqual(new_item.quantity, item.quantity)
         self.assertEqual(new_item.price, item.price)
+
+    def test_item_repr(self):
+        """It should return a string representation of the item"""
+        item = ItemFactory()
+        self.assertIn(str(item.id), repr(item))
+        self.assertIn(item.product_name, repr(item))

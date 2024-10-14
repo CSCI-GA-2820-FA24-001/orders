@@ -473,3 +473,74 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         resp = self.client.delete(f"{BASE_URL}/{order.id}/items/0")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_order_list_by_name(self):
+        """It should Get a list of Orders by name"""
+        orders = self._create_orders(3)
+        test_name = orders[0].customer_name
+        name_orders = [order for order in orders if order.customer_name == test_name]
+        resp = self.client.get(BASE_URL, query_string=f"name={test_name}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), len(name_orders))
+        for order in data:
+            self.assertEqual(order["customer_name"], test_name)
+
+    def test_update_order_not_found(self):
+        """It should not Update an order that is not found"""
+        test_order = OrderFactory()
+        resp = self.client.put(f"{BASE_URL}/0", json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_order_bad_request(self):
+        """It should not Update an order with bad data"""
+        test_order = self._create_orders(1)[0]
+        resp = self.client.put(
+            f"{BASE_URL}/{test_order.id}", json={"bad_key": "bad_value"}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_400_bad_request(self):
+        """It should return a 400 bad request error"""
+        resp = self.client.post(BASE_URL, json={})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_404_not_found(self):
+        """It should return a 404 not found error"""
+        resp = self.client.get(f"{BASE_URL}/0")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_405_method_not_allowed(self):
+        """It should return a 405 method not allowed error"""
+        resp = self.client.put(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_415_unsupported_media_type(self):
+        """It should return a 415 unsupported media type error"""
+        resp = self.client.post(BASE_URL, data="not json", content_type="text/plain")
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_get_item_list_order_not_found(self):
+        """It should return 404 when trying to get items for a non-existent order"""
+        resp = self.client.get(f"{BASE_URL}/0/items")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_add_item_order_not_found(self):
+        """It should return 404 when trying to add an item to a non-existent order"""
+        item = ItemFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/0/items",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_item_order_not_found(self):
+        """It should return 404 when trying to update an item in a non-existent order"""
+        item = ItemFactory()
+        resp = self.client.put(
+            f"{BASE_URL}/0/items/{item.id}",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)

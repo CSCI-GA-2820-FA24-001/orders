@@ -16,7 +16,7 @@ class Item(db.Model, PersistentBase):
     price = db.Column(db.Numeric(10, 2), nullable=False)
 
     def __repr__(self):
-        return f"<Item id={self.id} name=[{self.name}] orderid={self.orderid}>"
+        return f"<Item id={self.id} product_name=[{self.product_name}] order_id={self.order_id}>"
 
     def serialize(self):
         """Converts an Item into a dictionary"""
