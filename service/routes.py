@@ -305,6 +305,10 @@ def delete_order(order_id):
 def delete_item_from_order(order_id, item_id):
     """Delete an item from an order"""
     app.logger.info("Request to delete Item %s from Order id: %s", (item_id, order_id))
+    # Check if order exists
+    order = Order.find(order_id)
+    if not order:
+        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
     item = Item.find(item_id)
     if not item:
         abort(

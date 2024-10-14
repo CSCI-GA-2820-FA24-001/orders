@@ -421,7 +421,6 @@ class TestOrderService(TestCase):
 
         # Create an item
         item = ItemFactory()
-        print(item.id)
 
         # POST request to create an item
         resp = self.client.post(
@@ -444,6 +443,22 @@ class TestOrderService(TestCase):
             f"{BASE_URL}/{order.id}/items/{new_item_id}",
             content_type="application/json",
         )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_item_in_order_which_does_not_exist(self):
+        """It should not delete an item in an order which does not exist"""
+        # Create an item to search in a non existent order
+        item = ItemFactory()
+
+        # POST request to create an item and pass it in an order which does not exist
+        resp = self.client.post(
+            f"{BASE_URL}/0/items",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+        resp = self.client.delete(f"{BASE_URL}/0/items/{item.id}")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_item_not_in_order(self):
