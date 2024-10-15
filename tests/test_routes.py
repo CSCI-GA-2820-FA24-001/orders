@@ -524,7 +524,7 @@ class TestOrderService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-    
+
     def test_update_item_item_not_found(self):
         """It should return 404 when trying to update a non-existent item"""
         # Create an order to delete

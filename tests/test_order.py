@@ -25,7 +25,6 @@ from unittest.mock import patch
 from wsgi import app
 from service.models import Order, Item, DataValidationError, db
 from tests.factories import OrderFactory, ItemFactory
-from service.models import DataValidationError
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
@@ -208,4 +207,3 @@ class TestOrder(TestCase):
         order = OrderFactory()
         order.id = 0  # Set to an ID that doesn't exist
         self.assertRaises(DataValidationError, order.delete)
-
