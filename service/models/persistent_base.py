@@ -4,6 +4,7 @@ import logging
 from abc import abstractmethod
 from flask_sqlalchemy import SQLAlchemy
 
+
 logger = logging.getLogger("flask.app")
 
 # Create the SQLAlchemy object to be initialized later in init_db()

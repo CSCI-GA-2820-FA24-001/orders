@@ -1,12 +1,13 @@
 from unittest.mock import patch
 import pytest
-from service.models import PersistentBase  # 假设你的类是从这里导入的
+from service.models import PersistentBase
 from service.common.error_handlers import DataValidationError
+
 
 def test_update_raises_exception():
     """Test update method raises an exception when commit fails"""
     instance = PersistentBase()
-    instance.id = 1 
+    instance.id = 1
 
     with patch("service.models.db.session.commit", side_effect=Exception("DB Commit Error")):
         with patch("service.models.db.session.rollback") as mock_rollback:
