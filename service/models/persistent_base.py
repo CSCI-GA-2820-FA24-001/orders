@@ -20,6 +20,7 @@ class DataValidationError(Exception):
 class PersistentBase:
     """Base class added persistent methods"""
 
+    id = None
     created_at = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
     )
@@ -29,9 +30,6 @@ class PersistentBase:
         onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
-
-    def __init__(self):
-        self.id = None  # pylint: disable=invalid-name
 
     @abstractmethod
     def serialize(self) -> dict:

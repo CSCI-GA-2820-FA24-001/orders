@@ -25,6 +25,7 @@ from unittest.mock import patch
 from wsgi import app
 from service.models import Order, Item, DataValidationError, db
 from tests.factories import OrderFactory, ItemFactory
+from service.models import DataValidationError
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
@@ -70,20 +71,20 @@ class TestOrder(TestCase):
         fake_order = OrderFactory()
         # pylint: disable=unexpected-keyword-arg
         order = Order(
-            id= fake_order.id,
-            customer_name= fake_order.customer_name,
-            status= fake_order.status,
-            created_at= fake_order.created_at.isoformat(),
-            updated_at= fake_order.updated_at.isoformat(),
-            items= fake_order.items,
+            id=fake_order.id,
+            customer_name=fake_order.customer_name,
+            status=fake_order.status,
+            created_at=fake_order.created_at.isoformat(),
+            updated_at=fake_order.updated_at.isoformat(),
+            items=fake_order.items,
         )
-        
+
         self.assertIsNotNone(order)
         self.assertEqual(order.id, fake_order.id)
         self.assertEqual(order.customer_name, fake_order.customer_name)
         self.assertEqual(order.status, fake_order.status)
-        self.assertEqual(order.created_at, fake_order.created_at.strftime('%Y-%m-%d'))
-        self.assertEqual(order.updated_at, fake_order.updated_at.strftime('%Y-%m-%d'))
+        self.assertEqual(order.created_at, fake_order.created_at.strftime("%Y-%m-%d"))
+        self.assertEqual(order.updated_at, fake_order.updated_at.strftime("%Y-%m-%d"))
         self.assertEqual(len(order.items), len(fake_order.items))
 
     def test_add_a_order(self):
@@ -190,3 +191,21 @@ class TestOrder(TestCase):
         """It should not Deserialize an item with a TypeError"""
         item = Item()
         self.assertRaises(DataValidationError, item.deserialize, [])
+
+    def test_create_order_with_no_customer_name(self):
+        """It should not Create an Order without a customer name"""
+        order = Order()
+        self.assertRaises(DataValidationError, order.create)
+
+    def test_update_order_not_found(self):
+        """It should not Update an Order that's not found"""
+        order = OrderFactory()
+        order.id = 0  # Set to an ID that doesn't exist
+        self.assertRaises(DataValidationError, order.update)
+
+    def test_delete_order_not_found(self):
+        """It should not Delete an Order that's not found"""
+        order = OrderFactory()
+        order.id = 0  # Set to an ID that doesn't exist
+        self.assertRaises(DataValidationError, order.delete)
+

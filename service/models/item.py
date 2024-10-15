@@ -16,7 +16,7 @@ class Item(db.Model, PersistentBase):
     price = db.Column(db.Numeric(10, 2), nullable=False)
 
     def __repr__(self):
-        return f"<Item id={self.id} name=[{self.name}] orderid={self.orderid}>"
+        return f"<Item id={self.id} product_name=[{self.product_name}] order_id={self.order_id}>"
 
     def serialize(self):
         """Converts an Item into a dictionary"""
@@ -36,8 +36,8 @@ class Item(db.Model, PersistentBase):
             self.product_name = data["product_name"]
             self.quantity = data["quantity"]
             self.price = data["price"]
-        except AttributeError as error:
-            raise DataValidationError("Invalid attribute: " + error.args[0]) from error
+        # except AttributeError as error:
+        #     raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:
             raise DataValidationError(
                 "Invalid Item: missing " + error.args[0]

@@ -52,6 +52,7 @@ def index():
 def create_order():
     """Create an Order"""
     app.logger.info("Request to create an Order")
+    check_content_type("application/json")
 
     # Create the order
     order = Order()
@@ -146,8 +147,7 @@ def update_order(order_id):
     data = request.get_json()
     order.deserialize(data)
     order.id = order_id
-    if order:
-        Order.update(order)
+    order.update()
     # Return the updated order
     return jsonify(order.serialize()), status.HTTP_200_OK
 
@@ -290,8 +290,7 @@ def delete_order(order_id):
             status.HTTP_404_NOT_FOUND,
             f"Order with order id '{order_id}' is not found and hence cannot be deleted",
         )
-    if order:
-        Order.delete(order)
+    order.delete()
 
     return "", status.HTTP_204_NO_CONTENT
 
@@ -317,3 +316,11 @@ def delete_item_from_order(order_id, item_id):
         )
     item.delete()
     return "", status.HTTP_204_NO_CONTENT
+
+
+@app.route("/trigger_500", methods=["GET"])
+def trigger_500():
+    abort(
+        status.HTTP_500_INTERNAL_SERVER_ERROR,
+        "Test internal server error",
+    )

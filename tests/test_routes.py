@@ -473,3 +473,73 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         resp = self.client.delete(f"{BASE_URL}/{order.id}/items/0")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_order_list_by_name(self):
+        """It should Get a list of Orders by name"""
+        orders = self._create_orders(3)
+        test_name = orders[0].customer_name
+        name_orders = [order for order in orders if order.customer_name == test_name]
+        resp = self.client.get(BASE_URL, query_string=f"name={test_name}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), len(name_orders))
+        for order in data:
+            self.assertEqual(order["customer_name"], test_name)
+
+    def test_update_order_not_found(self):
+        """It should not Update an order that is not found"""
+        test_order = OrderFactory()
+        resp = self.client.put(f"{BASE_URL}/0", json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_order_bad_request(self):
+        """It should not Update an order with bad data"""
+        test_order = self._create_orders(1)[0]
+        resp = self.client.put(
+            f"{BASE_URL}/{test_order.id}", json={"bad_key": "bad_value"}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_item_list_order_not_found(self):
+        """It should return 404 when trying to get items for a non-existent order"""
+        resp = self.client.get(f"{BASE_URL}/0/items")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_add_item_order_not_found(self):
+        """It should return 404 when trying to add an item to a non-existent order"""
+        item = ItemFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/0/items",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_item_order_not_found(self):
+        """It should return 404 when trying to update an item in a non-existent order"""
+        item = ItemFactory()
+        resp = self.client.put(
+            f"{BASE_URL}/0/items/{item.id}",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+    
+    def test_update_item_item_not_found(self):
+        """It should return 404 when trying to update a non-existent item"""
+        # Create an order to delete
+        order = self._create_orders(1)[0]
+
+        # POST request to create the order
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        item = ItemFactory()
+        resp = self.client.put(
+            f"{BASE_URL}/{order.id}/items/{item.id}",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
