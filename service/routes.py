@@ -92,11 +92,10 @@ def list_orders():
     orders = []
 
     # Process the query string if any
-    name = request.args.get("name")
-    if name:
-        orders = Order.find_by_name(name)
-    else:
-        orders = Order.all()
+    customer_name = request.args.get("customer_name")
+    product_name = request.args.get("product_name")
+
+    orders = Order.find_by_criteria(customer_name, product_name)
 
     # Return as an array of dictionaries
     results = [order.serialize() for order in orders]

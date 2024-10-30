@@ -129,15 +129,26 @@ class TestOrder(TestCase):
         orders = Order.all()
         self.assertEqual(len(orders), 5)
 
-    def test_find_by_name(self):
-        """It should Find an Order by name"""
+    def test_find_by_customer_name(self):
+        """It should Find an Order by customer_name"""
         order = OrderFactory()
         order.create()
 
         # Fetch it back by name
-        same_order = Order.find_by_name(order.customer_name)[0]
+        same_order = Order.find_by_criteria(customer_name=order.customer_name)[0]
         self.assertEqual(same_order.id, order.id)
         self.assertEqual(same_order.customer_name, order.customer_name)
+
+    def test_find_by_product_name(self):
+        """It should Find an Order by product_name"""
+        order = OrderFactory()
+        item = ItemFactory()
+        order.items.append(item)
+        order.create()
+
+        same_order = Order.find_by_criteria(product_name=item.product_name)[0]
+        self.assertEqual(same_order.id, order.id)
+        self.assertEqual(same_order.items[0].product_name, item.product_name)
 
     def test_serialize_an_order(self):
         """It should Serialize an order"""

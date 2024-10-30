@@ -50,10 +50,20 @@ class Order(db.Model, PersistentBase):
         return self
 
     @classmethod
-    def find_by_name(cls, name):
-        """Returns all Orders with the given customer name
+    def find_by_criteria(cls, customer_name=None, product_name=None):
+        """Returns all Orders with the given filtering criteria
         Args:
-            name (string): the name of the customer whose orders you want
+            customer_name (string): the name of the customer whose orders you want
+            product_name (string): the name of the product which is contained in the orders.
         """
-        logger.info("Processing customer name query for %s ...", name)
-        return cls.query.filter(cls.customer_name == name)
+        logger.info("Processing orders query for customer_name=%s product_name=%s ...", customer_name, product_name)
+
+        query = cls.query
+
+        if customer_name:
+            query = query.filter(cls.customer_name == customer_name)
+
+        if product_name:
+            query = query.join(Item).filter(Item.product_name == product_name)
+
+        return query.all()
