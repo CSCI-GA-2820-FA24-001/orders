@@ -20,7 +20,7 @@ Test Factory to make fake objects for testing
 from datetime import date
 from factory import Factory, SubFactory, Sequence, Faker, post_generation
 from factory.fuzzy import FuzzyChoice, FuzzyDate, FuzzyInteger
-from service.models import Order, Item
+from service.models import Order, Item, Order_Status
 
 
 class OrderFactory(Factory):
@@ -34,7 +34,7 @@ class OrderFactory(Factory):
 
     id = Sequence(lambda n: n)
     customer_name = Faker("name")
-    status = FuzzyChoice(choices=["Pending approval", "Completed", "In progress"])
+    status = FuzzyChoice([os for os in Order_Status])
     created_at = FuzzyDate(date(2008, 1, 1))
     updated_at = FuzzyDate(date(2008, 9, 8))
     # the many side of relationships can be a little wonky in factory boy:

@@ -112,7 +112,7 @@ class TestOrderService(TestCase):
 
         # Check the data is correct
         new_order = resp.get_json()
-        self.assertEqual(new_order["status"], order.status, "status does not match")
+        self.assertEqual(new_order["status"], order.status.value, "status does not match")
         self.assertEqual(
             new_order["customer_name"],
             order.customer_name,
@@ -124,7 +124,7 @@ class TestOrderService(TestCase):
         resp = self.client.get(location, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_order = resp.get_json()
-        self.assertEqual(new_order["status"], order.status, "status does not match")
+        self.assertEqual(new_order["status"], order.status.value, "status does not match")
         self.assertEqual(
             new_order["customer_name"],
             order.customer_name,

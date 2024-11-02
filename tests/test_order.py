@@ -23,7 +23,7 @@ import os
 from unittest import TestCase
 from unittest.mock import patch
 from wsgi import app
-from service.models import Order, Item, DataValidationError, db
+from service.models import Order, Item, DataValidationError, db, Order_Status
 from tests.factories import OrderFactory, ItemFactory
 
 DATABASE_URI = os.getenv(
@@ -86,6 +86,39 @@ class TestOrder(TestCase):
         self.assertEqual(order.updated_at, fake_order.updated_at.strftime("%Y-%m-%d"))
         self.assertEqual(len(order.items), len(fake_order.items))
 
+    def test_create_an_order_with_default_status(self):
+        """It should Create an Order without status set and assert that the status is set to the default value"""
+        fake_order = OrderFactory()
+        # pylint: disable=unexpected-keyword-arg
+        order = Order(
+            # no status set so expecting a default of Created
+            id=fake_order.id,
+            customer_name=fake_order.customer_name,
+        )
+        order.create()
+    
+        self.assertIsNotNone(order)
+        self.assertEqual(order.status, Order_Status.Created)
+
+    def test_serialize_invalid_status(self):
+        """It should raise a DataValidationError when serializing an invalid status"""
+        order = OrderFactory()
+        order.status = "INVALID_STATUS"  # Directly set an invalid status
+        with self.assertRaises(DataValidationError):
+            order.serialize()
+
+    def test_deserialize_invalid_status(self):
+        """It should raise a DataValidationError when deserializing an invalid status"""
+        order = Order()
+        invalid_data = {
+            "customer_name": "John Doe",
+            "status": "INVALID_STATUS",
+            "items": []
+        }
+        with self.assertRaises(DataValidationError) as context:
+            order.deserialize(invalid_data)
+        self.assertIn("Invalid status value 'INVALID_STATUS' not in Order_Status Enum", str(context.exception))
+
     def test_add_a_order(self):
         """It should Create an order and add it to the database"""
         orders = Order.all()
@@ -147,7 +180,7 @@ class TestOrder(TestCase):
         serial_order = order.serialize()
         self.assertEqual(serial_order["id"], order.id)
         self.assertEqual(serial_order["customer_name"], order.customer_name)
-        self.assertEqual(serial_order["status"], order.status)
+        self.assertEqual(serial_order["status"], order.status.value)
         self.assertEqual(serial_order["created_at"], str(order.created_at))
         self.assertEqual(serial_order["updated_at"], str(order.updated_at))
         self.assertEqual(len(serial_order["items"]), 1)
