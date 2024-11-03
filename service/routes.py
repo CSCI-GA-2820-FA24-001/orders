@@ -283,12 +283,8 @@ def delete_order(order_id):
 
     # See if the order first exists
     order = Order.find(order_id)
-    if not order:
-        abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Order with order id '{order_id}' is not found and hence cannot be deleted",
-        )
-    order.delete()
+    if order:
+        order.delete()
 
     return "", status.HTTP_204_NO_CONTENT
 
@@ -307,12 +303,8 @@ def delete_item_from_order(order_id, item_id):
     if not order:
         abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
     item = Item.find(item_id)
-    if not item:
-        abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Item with id '{item_id}' could not be found.",
-        )
-    item.delete()
+    if item:
+        item.delete()
     return "", status.HTTP_204_NO_CONTENT
 
 
