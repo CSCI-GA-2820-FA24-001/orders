@@ -5,15 +5,13 @@ from enum import Enum
 
 logger = logging.getLogger("flask.app")
 
-
 class Order_Status(Enum):
     """Enumeration of valid order statuses"""
 
-    Created = "Created"
-    In_Progress = "In_Progress"
-    Shipped = "Shipped"
-    Completed = "Completed"
-    Cancelled = "Cancelled"
+    Created = 'Created'
+    In_Progress = 'In_Progress'
+    Shipped = 'Shipped'
+    Completed = 'Completed'
 
 
 class Order(db.Model, PersistentBase):
@@ -23,9 +21,7 @@ class Order(db.Model, PersistentBase):
 
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(64), nullable=False)
-    status = db.Column(
-        db.Enum(Order_Status), default=Order_Status.Created, nullable=False
-    )
+    status = db.Column(db.Enum(Order_Status), default=Order_Status.Created, nullable=False)
     items = db.relationship("Item", backref="order", passive_deletes=True)
 
     def __repr__(self):
@@ -34,10 +30,8 @@ class Order(db.Model, PersistentBase):
     def serialize(self):
         """Converts an Order into a dictionary"""
         if not isinstance(self.status, Order_Status):
-            raise DataValidationError(
-                f"Invalid status value '{self.status}' not in Order_Status Enum"
-            )
-
+            raise DataValidationError(f"Invalid status value '{self.status}' not in Order_Status Enum")
+        
         return {
             "id": self.id,
             "customer_name": self.customer_name,
@@ -54,9 +48,7 @@ class Order(db.Model, PersistentBase):
             try:
                 self.status = Order_Status(data["status"])
             except ValueError:
-                raise DataValidationError(
-                    f"Invalid status value '{data['status']}' not in Order_Status Enum"
-                )
+                raise DataValidationError(f"Invalid status value '{data['status']}' not in Order_Status Enum")
             item_list = data.get("items", [])
             for item_data in item_list:
                 item = Item()

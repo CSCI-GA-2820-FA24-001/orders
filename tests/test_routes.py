@@ -112,9 +112,7 @@ class TestOrderService(TestCase):
 
         # Check the data is correct
         new_order = resp.get_json()
-        self.assertEqual(
-            new_order["status"], order.status.value, "status does not match"
-        )
+        self.assertEqual(new_order["status"], order.status.value, "status does not match")
         self.assertEqual(
             new_order["customer_name"],
             order.customer_name,
@@ -126,9 +124,7 @@ class TestOrderService(TestCase):
         resp = self.client.get(location, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_order = resp.get_json()
-        self.assertEqual(
-            new_order["status"], order.status.value, "status does not match"
-        )
+        self.assertEqual(new_order["status"], order.status.value, "status does not match")
         self.assertEqual(
             new_order["customer_name"],
             order.customer_name,
@@ -547,92 +543,3 @@ class TestOrderService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_update_order_status(self):
-        """It should update an order's status"""
-        # Create a new order
-        order = self._create_orders(1)[0]
-
-        # Test status update flow: Created -> In_Progress -> Shipped -> Completed
-        status_flow = ["In_Progress", "Shipped", "Completed"]
-
-        for new_status in status_flow:
-            resp = self.client.put(
-                f"{BASE_URL}/{order.id}/status",
-                json={"status": new_status},
-                content_type="application/json",
-            )
-            self.assertEqual(resp.status_code, status.HTTP_200_OK)
-            data = resp.get_json()
-            self.assertEqual(data["status"], new_status)
-
-    def test_update_order_idempotent(self):
-        """It should be idempotent when updating to same status"""
-        order = self._create_orders(1)[0]
-
-        # Set initial status
-        resp = self.client.put(
-            f"{BASE_URL}/{order.id}/status",
-            json={"status": "In_Progress"},
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-        # Try to update with the same status
-        resp = self.client.put(
-            f"{BASE_URL}/{order.id}/status",
-            json={"status": "In_Progress"},
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(data["status"], "In_Progress")
-
-    def test_update_cancelled_order_status(self):
-        """It should not update status of cancelled order"""
-        order = self._create_orders(1)[0]
-
-        # First cancel the order
-        resp = self.client.put(
-            f"{BASE_URL}/{order.id}/status",
-            json={"status": "Cancelled"},
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-        # Try to update cancelled order's status
-        resp = self.client.put(
-            f"{BASE_URL}/{order.id}/status",
-            json={"status": "In_Progress"},
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_update_order_status_invalid(self):
-        """It should not update status with invalid value"""
-        order = self._create_orders(1)[0]
-        invalid_status = "INVALID_STATUS"
-
-        resp = self.client.put(
-            f"{BASE_URL}/{order.id}/status",
-            json={"status": invalid_status},
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_update_order_status_not_found(self):
-        """It should not update status of non-existent order"""
-        resp = self.client.put(
-            f"{BASE_URL}/0/status",
-            json={"status": "In_Progress"},
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_update_order_status_bad_request(self):
-        """It should not update status with missing status field"""
-        order = self._create_orders(1)[0]
-        resp = self.client.put(
-            f"{BASE_URL}/{order.id}/status", json={}, content_type="application/json"
-        )
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
