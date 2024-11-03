@@ -8,10 +8,14 @@ logger = logging.getLogger("flask.app")
 class Order_Status(Enum):
     """Enumeration of valid order statuses"""
 
-    Created = 'Created'
-    In_Progress = 'In_Progress'
-    Shipped = 'Shipped'
-    Completed = 'Completed'
+    CREATED = 'CREATED'
+    IN_PROGRESS = 'IN_PROGRESS'
+    SHIPPED = 'SHIPPED'
+    COMPLETED = 'COMPLETED'
+
+    @staticmethod
+    def list():
+        return list(map(lambda s: s.value, Order_Status))
 
 
 class Order(db.Model, PersistentBase):
@@ -21,7 +25,7 @@ class Order(db.Model, PersistentBase):
 
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(64), nullable=False)
-    status = db.Column(db.Enum(Order_Status), default=Order_Status.Created, nullable=False)
+    status = db.Column(db.Enum(Order_Status), default=Order_Status.CREATED, nullable=False)
     items = db.relationship("Item", backref="order", passive_deletes=True)
 
     def __repr__(self):
@@ -46,9 +50,9 @@ class Order(db.Model, PersistentBase):
         try:
             self.customer_name = data["customer_name"]
             try:
-                self.status = Order_Status(data["status"])
+                self.status = Order_Status(data["status"].upper())
             except ValueError:
-                raise DataValidationError(f"Invalid status value '{data['status']}' not in Order_Status Enum")
+                raise DataValidationError(f"Invalid status value '{data['status'].upper()}' not in Order_Status Enum")
             item_list = data.get("items", [])
             for item_data in item_list:
                 item = Item()
@@ -73,3 +77,22 @@ class Order(db.Model, PersistentBase):
         """
         logger.info("Processing customer name query for %s ...", name)
         return cls.query.filter(cls.customer_name == name)
+
+    @classmethod
+    def find_by_status(cls, order_status: str) -> list:
+        """Returns list of all Orders with the given order status
+        Args:
+            status (string): the status of orders you want
+        """
+       
+        if(order_status in Order_Status.list()):
+            print("hereeee")
+            logger.info("Processing status query for %s ...", order_status)
+            return cls.query.filter(cls.status == Order_Status[order_status])
+        else:
+            
+            logger.info("Order status %s is not in allowed list of order_statuses to query", order_status)
+            return []
+
+
+        

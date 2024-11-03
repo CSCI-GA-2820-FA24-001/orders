@@ -93,9 +93,15 @@ def list_orders():
 
     # Process the query string if any
     name = request.args.get("name")
+    order_status = request.args.get("order_status")
+
     if name:
         orders = Order.find_by_name(name)
+    elif order_status:
+        app.logger.info("Find by order status: %s", order_status)
+        orders = Order.find_by_status(order_status.upper())
     else:
+        app.logger.info("Find all")
         orders = Order.all()
 
     # Return as an array of dictionaries
