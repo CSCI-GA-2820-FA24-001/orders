@@ -364,11 +364,19 @@ class TestOrderService(TestCase):
         order = self._create_orders(1)[0]
         resp = self.client.delete(f"{BASE_URL}/{order.id}")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(resp.data), 0)
+        # make sure they are deleted
+        response = self.client.get(
+            f"{BASE_URL}/{order.id}", content_type="application/json"
+        )
+        self.assertEqual(
+            response.status_code, status.HTTP_404_NOT_FOUND
+        )  # 404 error after the fact
 
     def test_delete_order_by_orderid_empty(self):
         """It should return an error code when you try to delete an order which does not exist"""
         resp = self.client.delete(f"{BASE_URL}/0")
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_update_item(self):
         """It should update an item in an existing Order"""
@@ -476,7 +484,7 @@ class TestOrderService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         resp = self.client.delete(f"{BASE_URL}/{order.id}/items/0")
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_get_order_list_by_name(self):
         """It should Get a list of Orders by name"""
