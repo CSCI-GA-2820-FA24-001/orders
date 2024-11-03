@@ -24,7 +24,7 @@ and Delete Order
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.common import status  # HTTP Status Codes
-from service.models import Order, Item
+from service.models import Order, Item, Order_Status  # Added Order_Status import
 
 
 ######################################################################
@@ -322,3 +322,51 @@ def trigger_500():
         status.HTTP_500_INTERNAL_SERVER_ERROR,
         "Test internal server error",
     )
+
+
+######################################################################
+# Update Order Status
+######################################################################
+@app.route("/orders/<int:order_id>/status", methods=["PUT"])
+def update_order_status(order_id):
+    """Update the status of an Order"""
+    app.logger.info("Request to update order status for order with id: %s", order_id)
+    check_content_type("application/json")
+
+    # Find the order by ID
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' was not found.",
+        )
+
+    # Get the new status from request body
+    data = request.get_json()
+    if not data or "status" not in data:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Required field 'status' missing from request body",
+        )
+
+    try:
+        new_status = Order_Status(data["status"])
+
+        # If current status is Cancelled, don't allow any changes
+        if order.status == Order_Status.Cancelled:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "Cannot update status of a cancelled order",
+            )
+
+        # If the status is not changing, return success (idempotent)
+        if order.status == new_status:
+            return jsonify(order.serialize()), status.HTTP_200_OK
+
+        # Update the status
+        order.status = new_status
+        order.update()
+        return jsonify(order.serialize()), status.HTTP_200_OK
+
+    except ValueError as error:
+        abort(status.HTTP_400_BAD_REQUEST, f"Invalid status value: {str(error)}")
