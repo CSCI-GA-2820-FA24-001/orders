@@ -5,18 +5,20 @@ from enum import Enum
 
 logger = logging.getLogger("flask.app")
 
+
 class Order_Status(Enum):
     """Enumeration of valid order statuses"""
+
 
     CREATED = 'CREATED'
     IN_PROGRESS = 'IN_PROGRESS'
     SHIPPED = 'SHIPPED'
     COMPLETED = 'COMPLETED'
+    CANCELLED = "CANCELLED"
 
     @staticmethod
     def list():
         return list(map(lambda s: s.value, Order_Status))
-
 
 class Order(db.Model, PersistentBase):
     """Class that represents an Order"""
@@ -34,8 +36,10 @@ class Order(db.Model, PersistentBase):
     def serialize(self):
         """Converts an Order into a dictionary"""
         if not isinstance(self.status, Order_Status):
-            raise DataValidationError(f"Invalid status value '{self.status}' not in Order_Status Enum")
-        
+            raise DataValidationError(
+                f"Invalid status value '{self.status}' not in Order_Status Enum"
+            )
+
         return {
             "id": self.id,
             "customer_name": self.customer_name,
