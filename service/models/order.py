@@ -79,7 +79,7 @@ class Order(db.Model, PersistentBase):
         """Returns all Orders with the given filters
         Args:
             customer_name (string): the name of the customer whose orders you want
-            status (string): the status of orders you want
+            order_status (string): the status of orders you want
             product_name (string): the product_name of orders you want
         """
         query = cls.query
