@@ -75,28 +75,21 @@ class Order(db.Model, PersistentBase):
         return self
 
     @classmethod
-    def find_by_name(cls, name):
-        """Returns all Orders with the given customer name
+    def find_by_filters(cls, customer_name=None, order_status=None, product_name=None):
+        """Returns all Orders with the given filters
         Args:
-            name (string): the name of the customer whose orders you want
-        """
-        logger.info("Processing customer name query for %s ...", name)
-        return cls.query.filter(cls.customer_name == name)
-
-    @classmethod
-    def find_by_status(cls, order_status: str) -> list:
-        """Returns list of all Orders with the given order status
-        Args:
+            customer_name (string): the name of the customer whose orders you want
             status (string): the status of orders you want
+            product_name (string): the product_name of orders you want
         """
-       
-        if(order_status in Order_Status.list()):
-            logger.info("Processing status query for %s ...", order_status)
-            return cls.query.filter(cls.status == Order_Status[order_status])
-        else:
-            
-            logger.info("Order status %s is not in allowed list of order_statuses to query", order_status)
-            return []
-
-
-        
+        query = cls.query
+        if customer_name:
+            query = query.filter(cls.customer_name == customer_name)
+        if order_status:
+            if order_status in Order_Status.list():
+                query = query.filter(cls.status == Order_Status[order_status])
+            else:
+                query = query.filter(False)
+        if product_name:
+            query = query.join(Item).filter(Item.product_name == product_name)
+        return query.all()

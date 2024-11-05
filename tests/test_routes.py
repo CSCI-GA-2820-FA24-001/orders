@@ -673,3 +673,30 @@ class TestOrderService(TestCase):
             f"{BASE_URL}/{order.id}/status", json={}, content_type="application/json"
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_order_by_product_name(self):
+        """It should Get Orders by product name"""
+        order = self._create_orders(3)[0]
+        item = ItemFactory.create()
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items", json=item.serialize()
+        )
+        resp = self.client.get(
+            BASE_URL, query_string=f"product_name={item.product_name}"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], order.id)
+
+    def test_get_order_by_product_name_empty(self):
+        """It should Get an empty list of Orders for product_name that does not exist in db"""
+        order = self._create_orders(3)[0]
+        item = ItemFactory.create()
+        item.product_name = "productA"
+        resp = self.client.post(f"{BASE_URL}/{order.id}/items", json=item.serialize())
+
+        resp = self.client.get(BASE_URL, query_string="product_name=productB")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
