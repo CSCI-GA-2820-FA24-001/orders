@@ -601,7 +601,7 @@ class TestOrderService(TestCase):
             )
             self.assertEqual(resp.status_code, status.HTTP_200_OK)
             data = resp.get_json()
-            self.assertEqual(data["status"], new_status)
+            self.assertEqual(data["status"], new_status.upper())
 
     def test_update_order_idempotent(self):
         """It should be idempotent when updating to same status"""
@@ -623,7 +623,7 @@ class TestOrderService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
-        self.assertEqual(data["status"], "In_Progress")
+        self.assertEqual(data["status"], "IN_PROGRESS")
 
     def test_update_cancelled_order_status(self):
         """It should not update status of cancelled order"""

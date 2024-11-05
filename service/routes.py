@@ -348,10 +348,10 @@ def update_order_status(order_id):
         )
 
     try:
-        new_status = Order_Status(data["status"])
+        new_status = Order_Status(data["status"].upper())
 
         # If current status is Cancelled, don't allow any changes
-        if order.status == Order_Status.Cancelled:
+        if order.status == Order_Status.CANCELLED:
             abort(
                 status.HTTP_400_BAD_REQUEST,
                 "Cannot update status of a cancelled order",

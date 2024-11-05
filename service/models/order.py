@@ -91,7 +91,6 @@ class Order(db.Model, PersistentBase):
         """
        
         if(order_status in Order_Status.list()):
-            print("hereeee")
             logger.info("Processing status query for %s ...", order_status)
             return cls.query.filter(cls.status == Order_Status[order_status])
         else:
