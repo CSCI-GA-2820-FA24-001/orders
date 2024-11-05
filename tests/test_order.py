@@ -91,14 +91,14 @@ class TestOrder(TestCase):
         fake_order = OrderFactory()
         # pylint: disable=unexpected-keyword-arg
         order = Order(
-            # no status set so expecting a default of Created
+            # no status set so expecting a default of CREATED
             id=fake_order.id,
             customer_name=fake_order.customer_name,
         )
         order.create()
     
         self.assertIsNotNone(order)
-        self.assertEqual(order.status, Order_Status.Created)
+        self.assertEqual(order.status, Order_Status.CREATED)
 
     def test_serialize_invalid_status(self):
         """It should raise a DataValidationError when serializing an invalid status"""
@@ -240,3 +240,27 @@ class TestOrder(TestCase):
         order = OrderFactory()
         order.id = 0  # Set to an ID that doesn't exist
         self.assertRaises(DataValidationError, order.delete)
+
+    def test_find_by_order_status(self):
+        """It should Find Orders by order status"""
+        orders = OrderFactory.create_batch(10)
+        for order in orders:
+            order.create()
+        order_status = orders[0].status
+        count = len([order for order in orders if order.status == order_status])
+        found = Order.find_by_status(order_status.value)
+        self.assertEqual(found.count(), count)
+        for order in found:
+            self.assertEqual(order.status, order_status)
+
+    def test_find_by__invalid_order_status(self):
+        """It should Find empty list for invalid order status queried"""
+        orders = OrderFactory.create_batch(10)
+        for order in orders:
+            order.create()
+        order_status = "INVALID_STATUS"
+        count = len([order for order in orders if order.status.value == order_status])
+        found = Order.find_by_status(order_status)
+        self.assertEqual(len(found), count)
+        self.assertEqual(len(found), 0)
+        self.assertEqual(count, 0)

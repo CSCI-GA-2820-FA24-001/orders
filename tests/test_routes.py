@@ -25,7 +25,7 @@ import logging
 from unittest import TestCase
 from wsgi import app
 from service.common import status
-from service.models import db, Order
+from service.models import db, Order, Order_Status
 from tests.factories import OrderFactory, ItemFactory
 from factory import Faker
 
@@ -556,6 +556,35 @@ class TestOrderService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
+# ----------------------------------------------------------
+# TEST QUERY
+# ----------------------------------------------------------
+    def test_query_by_order_status(self):
+        """It should Query Orders by order status"""
+        orders = self._create_orders(5)
+        completed_orders = [order for order in orders if order.status == Order_Status.COMPLETED]
+        completed_count = len(completed_orders)
+        logging.debug("Completed Orders [%d] %s", completed_count, completed_orders)
+
+        # test for available
+        response = self.client.get(BASE_URL, query_string="order_status=completed")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), completed_count)
+        # check the data just to be sure
+        for order in data:
+            self.assertEqual(order["status"], Order_Status.COMPLETED.value)
+
+    def test_create_order_bad_order_status(self):
+        """It should not Create an Order with bad order status data"""
+        order = OrderFactory()
+        logging.debug(order)
+        # change status to a bad string
+        test_order = order.serialize()
+        test_order["status"] = "INVALID_STATUS"  # invalid status
+        response = self.client.post(BASE_URL, json=test_order)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_update_order_status(self):
         """It should update an order's status"""
         # Create a new order
@@ -572,7 +601,7 @@ class TestOrderService(TestCase):
             )
             self.assertEqual(resp.status_code, status.HTTP_200_OK)
             data = resp.get_json()
-            self.assertEqual(data["status"], new_status)
+            self.assertEqual(data["status"], new_status.upper())
 
     def test_update_order_idempotent(self):
         """It should be idempotent when updating to same status"""
@@ -594,7 +623,7 @@ class TestOrderService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
-        self.assertEqual(data["status"], "In_Progress")
+        self.assertEqual(data["status"], "IN_PROGRESS")
 
     def test_update_cancelled_order_status(self):
         """It should not update status of cancelled order"""

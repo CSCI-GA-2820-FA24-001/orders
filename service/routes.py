@@ -93,9 +93,15 @@ def list_orders():
 
     # Process the query string if any
     name = request.args.get("name")
+    order_status = request.args.get("order_status")
+
     if name:
         orders = Order.find_by_name(name)
+    elif order_status:
+        app.logger.info("Find by order status: %s", order_status)
+        orders = Order.find_by_status(order_status.upper())
     else:
+        app.logger.info("Find all")
         orders = Order.all()
 
     # Return as an array of dictionaries
@@ -133,13 +139,10 @@ def list_items_in_order(order_id):
 def update_order(order_id):
     """Updates an order"""
     app.logger.info(f"Request to update order id:{order_id}")
-    print("Called1")
     # Check if order exists
-    print("Called2")
     order = Order.find(order_id)
     if not order:
         abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
-    print("Called3")
     # Update order with info in the json request
     data = request.get_json()
     app.logger.debug("Payload received for update: %s", data)
@@ -342,10 +345,10 @@ def update_order_status(order_id):
         )
 
     try:
-        new_status = Order_Status(data["status"])
+        new_status = Order_Status(data["status"].upper())
 
         # If current status is Cancelled, don't allow any changes
-        if order.status == Order_Status.Cancelled:
+        if order.status == Order_Status.CANCELLED:
             abort(
                 status.HTTP_400_BAD_REQUEST,
                 "Cannot update status of a cancelled order",
