@@ -147,6 +147,21 @@ def update_order(order_id):
     # Return the updated order
     return jsonify(order.serialize()), status.HTTP_200_OK
 
+@app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
+def cancel_order(order_id):
+    """Cancels an order"""
+    app.logger.info(f"Request to cancel order id:{order_id}")
+    # Check if order exists
+    order = Order.find(order_id)
+    if not order:
+        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+   
+    app.logger.info(f"Changing status of order with order id:{order_id} to CANCELLED")
+    order.status = Order_Status.CANCELLED
+    order.update()
+    # Return the updated order
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
 
 ######################################################################
 # UPDATE AN ITEM IN AN ORDER

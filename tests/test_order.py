@@ -119,6 +119,19 @@ class TestOrder(TestCase):
             order.deserialize(invalid_data)
         self.assertIn("Invalid status value 'INVALID_STATUS' not in Order_Status Enum", str(context.exception))
 
+    def test_deserialize_no_status_feild(self):
+        """It should assign status a CREATED enum as a default"""
+        order = OrderFactory()
+        order.items.append(ItemFactory())
+        order.create()
+        serial_order = order.serialize()
+        if "status" in serial_order:
+            del serial_order["status"]
+        new_order = Order()
+        new_order.deserialize(serial_order)
+        self.assertEqual(new_order.customer_name, order.customer_name)
+        self.assertEqual(new_order.status, Order_Status.CREATED)
+
     def test_add_a_order(self):
         """It should Create an order and add it to the database"""
         orders = Order.all()

@@ -674,6 +674,7 @@ class TestOrderService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
+
     def test_get_order_by_product_name(self):
         """It should Get Orders by product name"""
         order = self._create_orders(3)[0]
@@ -700,3 +701,36 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(len(data), 0)
+
+    def test_cancel_order(self):
+            """It should cancel an existing Order"""
+            # Create an order to update
+            order = self._create_orders(1)[0]
+
+            # POST request to create the order
+            resp = self.client.post(
+                BASE_URL, json=order.serialize(), content_type="application/json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+            new_order = resp.get_json()
+            new_order_id = new_order["id"]
+
+            # Send a PUT request to update the order
+            resp = self.client.put(
+                f"{BASE_URL}/{new_order_id}/cancel",
+                json=new_order,
+                content_type="application/json",
+            )
+
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+            updated_order = resp.get_json()
+            self.assertEqual(updated_order["status"], "CANCELLED")
+
+    def test_cancel_order_not_found(self):
+            """It should not cancel an order that is not found"""
+            test_order = OrderFactory()
+            invalid_order_id = test_order.id -1
+            resp = self.client.put(f"{BASE_URL}/{invalid_order_id}/cancel", json=test_order.serialize())
+            self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
