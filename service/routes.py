@@ -89,20 +89,13 @@ def read_order(order_id):
 def list_orders():
     """Returns all of the Orders"""
     app.logger.info("Request for Order list")
-    orders = []
 
     # Process the query string if any
-    name = request.args.get("name")
+    customer_name = request.args.get("name")
     order_status = request.args.get("order_status")
+    product_name = request.args.get("product_name")
 
-    if name:
-        orders = Order.find_by_name(name)
-    elif order_status:
-        app.logger.info("Find by order status: %s", order_status)
-        orders = Order.find_by_status(order_status.upper())
-    else:
-        app.logger.info("Find all")
-        orders = Order.all()
+    orders = Order.find_by_filters(customer_name=customer_name, order_status=order_status, product_name=product_name)
 
     # Return as an array of dictionaries
     results = [order.serialize() for order in orders]

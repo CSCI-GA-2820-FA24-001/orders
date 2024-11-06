@@ -181,7 +181,7 @@ class TestOrder(TestCase):
         order.create()
 
         # Fetch it back by name
-        same_order = Order.find_by_name(order.customer_name)[0]
+        same_order = Order.find_by_filters(customer_name=order.customer_name)[0]
         self.assertEqual(same_order.id, order.id)
         self.assertEqual(same_order.customer_name, order.customer_name)
 
@@ -261,8 +261,8 @@ class TestOrder(TestCase):
             order.create()
         order_status = orders[0].status
         count = len([order for order in orders if order.status == order_status])
-        found = Order.find_by_status(order_status.value)
-        self.assertEqual(found.count(), count)
+        found = Order.find_by_filters(order_status=order_status.value)
+        self.assertEqual(len(found), count)
         for order in found:
             self.assertEqual(order.status, order_status)
 
@@ -273,7 +273,28 @@ class TestOrder(TestCase):
             order.create()
         order_status = "INVALID_STATUS"
         count = len([order for order in orders if order.status.value == order_status])
-        found = Order.find_by_status(order_status)
+        found = Order.find_by_filters(order_status=order_status)
         self.assertEqual(len(found), count)
         self.assertEqual(len(found), 0)
         self.assertEqual(count, 0)
+
+    def test_find_by_product_name(self):
+        """It should Find an Order by product_name"""
+        order = OrderFactory()
+        item = ItemFactory()
+        order.items.append(item)
+        order.create()
+
+        same_order = Order.find_by_filters(product_name=item.product_name)[0]
+        self.assertEqual(same_order.id, order.id)
+        self.assertEqual(same_order.items[0].product_name, item.product_name)
+
+    def test_find_by_invalid_product_name(self):
+        """It should Find empty list for non-existing product_name queried"""
+        order = OrderFactory()
+        item = ItemFactory()
+        order.items.append(item)
+        order.create()
+
+        orders = Order.find_by_filters(product_name="IMPOSSIBLE PRODUCT")
+        self.assertEqual(len(orders), 0)
