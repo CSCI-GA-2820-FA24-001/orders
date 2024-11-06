@@ -90,6 +90,7 @@ class Order(db.Model, PersistentBase):
         if customer_name:
             query = query.filter(cls.customer_name == customer_name)
         if order_status:
+            order_status = order_status.upper()
             if order_status in Order_Status.list():
                 query = query.filter(cls.status == Order_Status[order_status])
             else:
