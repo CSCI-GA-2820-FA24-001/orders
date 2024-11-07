@@ -9,11 +9,11 @@ logger = logging.getLogger("flask.app")
 class Order_Status(Enum):
     """Enumeration of valid order statuses"""
 
-    CREATED = 'CREATED'
-    IN_PROGRESS = 'IN_PROGRESS'
-    SHIPPED = 'SHIPPED'
-    COMPLETED = 'COMPLETED'
-    CANCELLED = 'CANCELLED'
+    CREATED = "CREATED"
+    IN_PROGRESS = "IN_PROGRESS"
+    SHIPPED = "SHIPPED"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
     @staticmethod
     def list():
@@ -27,7 +27,9 @@ class Order(db.Model, PersistentBase):
 
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(64), nullable=False)
-    status = db.Column(db.Enum(Order_Status), default=Order_Status.CREATED, nullable=False)
+    status = db.Column(
+        db.Enum(Order_Status), default=Order_Status.CREATED, nullable=False
+    )
     items = db.relationship("Item", backref="order", passive_deletes=True)
 
     def __repr__(self):
@@ -58,9 +60,10 @@ class Order(db.Model, PersistentBase):
                     self.status = Order_Status(data["status"].upper())
                 else:
                     self.status = Order_Status.CREATED
-                    
             except ValueError:
-                raise DataValidationError(f"Invalid status value '{data['status'].upper()}' not in Order_Status Enum")
+                raise DataValidationError(
+                    f"Invalid status value '{data['status'].upper()}' not in Order_Status Enum"
+                )
 
             item_list = data.get("items", [])
             for item_data in item_list:
