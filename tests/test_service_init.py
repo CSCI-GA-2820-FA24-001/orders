@@ -1,5 +1,9 @@
-import pytest
+"""
+Initialising test service
+"""
+
 from unittest.mock import patch
+import pytest
 from service import create_app
 
 

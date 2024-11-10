@@ -24,7 +24,7 @@ and Delete Order
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.common import status  # HTTP Status Codes
-from service.models import Order, Item, Order_Status  # Added Order_Status import
+from service.models import Order, Item, OrderStatus  # Added Order_Status import
 
 
 ######################################################################
@@ -95,7 +95,11 @@ def list_orders():
     order_status = request.args.get("order_status")
     product_name = request.args.get("product_name")
 
-    orders = Order.find_by_filters(customer_name=customer_name, order_status=order_status, product_name=product_name)
+    orders = Order.find_by_filters(
+        customer_name=customer_name,
+        order_status=order_status,
+        product_name=product_name,
+    )
 
     # Return as an array of dictionaries
     results = [order.serialize() for order in orders]
@@ -158,7 +162,7 @@ def cancel_order(order_id):
         abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
 
     app.logger.info(f"Changing status of order with order id:{order_id} to CANCELLED")
-    order.status = Order_Status.CANCELLED
+    order.status = OrderStatus.CANCELLED
     order.update()
     # Return the updated order
     return jsonify(order.serialize()), status.HTTP_200_OK
@@ -322,6 +326,7 @@ def delete_item_from_order(order_id, item_id):
 
 @app.route("/trigger_500", methods=["GET"])
 def trigger_500():
+    """Tests internal server error"""
     abort(
         status.HTTP_500_INTERNAL_SERVER_ERROR,
         "Test internal server error",
@@ -354,10 +359,10 @@ def update_order_status(order_id):
         )
 
     try:
-        new_status = Order_Status(data["status"].upper())
+        new_status = OrderStatus(data["status"].upper())
 
         # If current status is Cancelled, don't allow any changes
-        if order.status == Order_Status.CANCELLED:
+        if order.status == OrderStatus.CANCELLED:
             abort(
                 status.HTTP_400_BAD_REQUEST,
                 "Cannot update status of a cancelled order",

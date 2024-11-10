@@ -1,3 +1,7 @@
+"""
+Properties and functions for Item
+"""
+
 import logging
 from .persistent_base import db, PersistentBase, DataValidationError
 
