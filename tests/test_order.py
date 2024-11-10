@@ -96,7 +96,7 @@ class TestOrder(TestCase):
             customer_name=fake_order.customer_name,
         )
         order.create()
-    
+
         self.assertIsNotNone(order)
         self.assertEqual(order.status, Order_Status.CREATED)
 
