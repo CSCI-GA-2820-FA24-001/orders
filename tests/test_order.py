@@ -96,6 +96,7 @@ class TestOrder(TestCase):
             customer_name=fake_order.customer_name,
         )
         order.create()
+    
         self.assertIsNotNone(order)
         self.assertEqual(order.status, Order_Status.CREATED)
 
@@ -112,14 +113,11 @@ class TestOrder(TestCase):
         invalid_data = {
             "customer_name": "John Doe",
             "status": "INVALID_STATUS",
-            "items": [],
+            "items": []
         }
         with self.assertRaises(DataValidationError) as context:
             order.deserialize(invalid_data)
-        self.assertIn(
-            "Invalid status value 'INVALID_STATUS' not in Order_Status Enum",
-            str(context.exception),
-        )
+        self.assertIn("Invalid status value 'INVALID_STATUS' not in Order_Status Enum", str(context.exception))
 
     def test_deserialize_no_status_feild(self):
         """It should assign status a CREATED enum as a default"""
