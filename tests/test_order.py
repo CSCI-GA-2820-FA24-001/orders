@@ -34,6 +34,7 @@ DATABASE_URI = os.getenv(
 ######################################################################
 #        O R D E R   M O D E L   T E S T   C A S E S
 ######################################################################
+# pylint: disable=too-many-public-methods
 class TestOrder(TestCase):
     """Order Model Test Cases"""
 
