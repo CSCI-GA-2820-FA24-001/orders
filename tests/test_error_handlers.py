@@ -1,3 +1,7 @@
+"""
+Defining error handlers
+"""
+
 # pylint: disable=duplicate-code
 from unittest import TestCase
 import logging

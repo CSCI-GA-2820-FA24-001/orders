@@ -1,23 +1,28 @@
+"""
+Defined properties and methods of the order model
+"""
+
 import logging
+from enum import Enum
 from .persistent_base import db, PersistentBase, DataValidationError
 from .item import Item
-from enum import Enum
 
 logger = logging.getLogger("flask.app")
 
 
-class Order_Status(Enum):
+class OrderStatus(Enum):
     """Enumeration of valid order statuses"""
 
-    CREATED = 'CREATED'
-    IN_PROGRESS = 'IN_PROGRESS'
-    SHIPPED = 'SHIPPED'
-    COMPLETED = 'COMPLETED'
-    CANCELLED = 'CANCELLED'
+    CREATED = "CREATED"
+    IN_PROGRESS = "IN_PROGRESS"
+    SHIPPED = "SHIPPED"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
     @staticmethod
     def list():
-        return list(map(lambda s: s.value, Order_Status))
+        """Lists different order statuses"""
+        return list(map(lambda s: s.value, OrderStatus))
 
 
 class Order(db.Model, PersistentBase):
@@ -27,7 +32,9 @@ class Order(db.Model, PersistentBase):
 
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(64), nullable=False)
-    status = db.Column(db.Enum(Order_Status), default=Order_Status.CREATED, nullable=False)
+    status = db.Column(
+        db.Enum(OrderStatus), default=OrderStatus.CREATED, nullable=False
+    )
     items = db.relationship("Item", backref="order", passive_deletes=True)
 
     def __repr__(self):
@@ -35,9 +42,9 @@ class Order(db.Model, PersistentBase):
 
     def serialize(self):
         """Converts an Order into a dictionary"""
-        if not isinstance(self.status, Order_Status):
+        if not isinstance(self.status, OrderStatus):
             raise DataValidationError(
-                f"Invalid status value '{self.status}' not in Order_Status Enum"
+                f"Invalid status value '{self.status}' not in OrderStatus Enum"
             )
 
         return {
@@ -55,11 +62,13 @@ class Order(db.Model, PersistentBase):
             self.customer_name = data["customer_name"]
             try:
                 if "status" in data:
-                    self.status = Order_Status(data["status"].upper())
+                    self.status = OrderStatus(data["status"].upper())
                 else:
-                    self.status = Order_Status.CREATED
-            except ValueError:
-                raise DataValidationError(f"Invalid status value '{data['status'].upper()}' not in Order_Status Enum")
+                    self.status = OrderStatus.CREATED
+            except ValueError as exc:
+                raise DataValidationError(
+                    f"Invalid status value '{data['status'].upper()}' not in OrderStatus Enum"
+                ) from exc
 
             item_list = data.get("items", [])
             for item_data in item_list:
@@ -90,8 +99,8 @@ class Order(db.Model, PersistentBase):
             query = query.filter(cls.customer_name == customer_name)
         if order_status:
             order_status = order_status.upper()
-            if order_status in Order_Status.list():
-                query = query.filter(cls.status == Order_Status[order_status])
+            if order_status in OrderStatus.list():
+                query = query.filter(cls.status == OrderStatus[order_status])
             else:
                 query = query.filter(False)
         if product_name:

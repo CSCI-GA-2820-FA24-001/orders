@@ -43,7 +43,7 @@ def create_app():
         # Dependencies require we import the routes AFTER the Flask app is created
         # pylint: disable=wrong-import-position, wrong-import-order, unused-import
         from service import routes  # noqa: F401 E402
-        from service.models import Order, Item, Order_Status
+        from service.models import Order, Item, OrderStatus
         from service.common import error_handlers, cli_commands  # noqa: F401, E402
 
         try:

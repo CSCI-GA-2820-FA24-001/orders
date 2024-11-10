@@ -23,7 +23,7 @@ import os
 from unittest import TestCase
 from unittest.mock import patch
 from wsgi import app
-from service.models import Order, Item, DataValidationError, db, Order_Status
+from service.models import Order, Item, DataValidationError, db, OrderStatus
 from tests.factories import OrderFactory, ItemFactory
 
 DATABASE_URI = os.getenv(
@@ -34,6 +34,7 @@ DATABASE_URI = os.getenv(
 ######################################################################
 #        O R D E R   M O D E L   T E S T   C A S E S
 ######################################################################
+# pylint: disable=too-many-public-methods
 class TestOrder(TestCase):
     """Order Model Test Cases"""
 
@@ -98,7 +99,7 @@ class TestOrder(TestCase):
         order.create()
 
         self.assertIsNotNone(order)
-        self.assertEqual(order.status, Order_Status.CREATED)
+        self.assertEqual(order.status, OrderStatus.CREATED)
 
     def test_serialize_invalid_status(self):
         """It should raise a DataValidationError when serializing an invalid status"""
@@ -113,11 +114,14 @@ class TestOrder(TestCase):
         invalid_data = {
             "customer_name": "John Doe",
             "status": "INVALID_STATUS",
-            "items": []
+            "items": [],
         }
         with self.assertRaises(DataValidationError) as context:
             order.deserialize(invalid_data)
-        self.assertIn("Invalid status value 'INVALID_STATUS' not in Order_Status Enum", str(context.exception))
+        self.assertIn(
+            "Invalid status value 'INVALID_STATUS' not in OrderStatus Enum",
+            str(context.exception),
+        )
 
     def test_deserialize_no_status_feild(self):
         """It should assign status a CREATED enum as a default"""
@@ -130,7 +134,7 @@ class TestOrder(TestCase):
         new_order = Order()
         new_order.deserialize(serial_order)
         self.assertEqual(new_order.customer_name, order.customer_name)
-        self.assertEqual(new_order.status, Order_Status.CREATED)
+        self.assertEqual(new_order.status, OrderStatus.CREATED)
 
     def test_add_a_order(self):
         """It should Create an order and add it to the database"""

@@ -22,9 +22,8 @@ import logging
 import os
 from unittest import TestCase
 from wsgi import app
-from service.models import Order, Item, db
+from service.models import Order, Item, db, DataValidationError
 from tests.factories import OrderFactory, ItemFactory
-from service.models import DataValidationError
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
@@ -34,6 +33,7 @@ DATABASE_URI = os.getenv(
 ######################################################################
 #        I T E M   M O D E L   T E S T   C A S E S
 ######################################################################
+# pylint: disable=duplicate-code
 class TestItem(TestCase):
     """Item Model Test Cases"""
 

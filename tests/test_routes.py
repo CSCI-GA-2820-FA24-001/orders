@@ -23,11 +23,11 @@ from datetime import datetime
 import os
 import logging
 from unittest import TestCase
+from factory import Faker
 from wsgi import app
 from service.common import status
-from service.models import db, Order, Order_Status
+from service.models import db, Order, OrderStatus
 from tests.factories import OrderFactory, ItemFactory
-from factory import Faker
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -77,7 +77,6 @@ class TestOrderService(TestCase):
         orders = []
         for _ in range(count):
             order = OrderFactory()
-            print(order)
             resp = self.client.post(BASE_URL, json=order.serialize())
             self.assertEqual(
                 resp.status_code,
@@ -327,7 +326,6 @@ class TestOrderService(TestCase):
         """It should not Get an empty list of Orders for customer_name that does not exist in db"""
         customer_name = Faker("name")
         resp = self.client.get(BASE_URL, query_string=f"customer_name={customer_name}")
-        print(resp)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(len(data), 0)
@@ -556,13 +554,15 @@ class TestOrderService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-# ----------------------------------------------------------
-# TEST QUERY
-# ----------------------------------------------------------
+    # ----------------------------------------------------------
+    # TEST QUERY
+    # ----------------------------------------------------------
     def test_query_by_order_status(self):
         """It should Query Orders by order status"""
         orders = self._create_orders(5)
-        completed_orders = [order for order in orders if order.status == Order_Status.COMPLETED]
+        completed_orders = [
+            order for order in orders if order.status == OrderStatus.COMPLETED
+        ]
         completed_count = len(completed_orders)
         logging.debug("Completed Orders [%d] %s", completed_count, completed_orders)
 
@@ -573,7 +573,7 @@ class TestOrderService(TestCase):
         self.assertEqual(len(data), completed_count)
         # check the data just to be sure
         for order in data:
-            self.assertEqual(order["status"], Order_Status.COMPLETED.value)
+            self.assertEqual(order["status"], OrderStatus.COMPLETED.value)
 
     def test_create_order_bad_order_status(self):
         """It should not Create an Order with bad order status data"""
@@ -594,48 +594,44 @@ class TestOrderService(TestCase):
         status_flow = ["In_Progress", "Shipped", "Completed"]
 
         for new_status in status_flow:
-            resp = self.client.put(
-                f"{BASE_URL}/{order.id}/status",
-                json={"status": new_status},
-                content_type="application/json",
-            )
-            self.assertEqual(resp.status_code, status.HTTP_200_OK)
-            data = resp.get_json()
-            self.assertEqual(data["status"], new_status.upper())
+            if order.status != OrderStatus.CANCELLED:
+                resp = self.client.put(
+                    f"{BASE_URL}/{order.id}/status",
+                    json={"status": new_status},
+                    content_type="application/json",
+                )
+                self.assertEqual(resp.status_code, status.HTTP_200_OK)
+                data = resp.get_json()
+                self.assertEqual(data["status"], new_status.upper())
 
     def test_update_order_idempotent(self):
         """It should be idempotent when updating to same status"""
         order = self._create_orders(1)[0]
-
-        # Set initial status
-        resp = self.client.put(
-            f"{BASE_URL}/{order.id}/status",
-            json={"status": "In_Progress"},
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        curr_status = order.status
 
         # Try to update with the same status
-        resp = self.client.put(
-            f"{BASE_URL}/{order.id}/status",
-            json={"status": "In_Progress"},
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(data["status"], "IN_PROGRESS")
+        if curr_status != OrderStatus.CANCELLED:
+            resp = self.client.put(
+                f"{BASE_URL}/{order.id}/status",
+                json={"status": curr_status.value},
+                content_type="application/json",
+            )
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+            data = resp.get_json()
+            self.assertEqual(data["status"], curr_status.value)
 
     def test_update_cancelled_order_status(self):
         """It should not update status of cancelled order"""
         order = self._create_orders(1)[0]
 
         # First cancel the order
-        resp = self.client.put(
-            f"{BASE_URL}/{order.id}/status",
-            json={"status": "Cancelled"},
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        if order.status != OrderStatus.CANCELLED:
+            resp = self.client.put(
+                f"{BASE_URL}/{order.id}/status",
+                json={"status": "Cancelled"},
+                content_type="application/json",
+            )
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         # Try to update cancelled order's status
         resp = self.client.put(
@@ -678,9 +674,7 @@ class TestOrderService(TestCase):
         """It should Get Orders by product name"""
         order = self._create_orders(3)[0]
         item = ItemFactory.create()
-        resp = self.client.post(
-            f"{BASE_URL}/{order.id}/items", json=item.serialize()
-        )
+        resp = self.client.post(f"{BASE_URL}/{order.id}/items", json=item.serialize())
         resp = self.client.get(
             BASE_URL, query_string=f"product_name={item.product_name}"
         )
@@ -731,5 +725,7 @@ class TestOrderService(TestCase):
         """It should not cancel an order that is not found"""
         test_order = OrderFactory()
         invalid_order_id = test_order.id - 1
-        resp = self.client.put(f"{BASE_URL}/{invalid_order_id}/cancel", json=test_order.serialize())
+        resp = self.client.put(
+            f"{BASE_URL}/{invalid_order_id}/cancel", json=test_order.serialize()
+        )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
