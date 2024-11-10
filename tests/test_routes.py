@@ -625,12 +625,13 @@ class TestOrderService(TestCase):
         order = self._create_orders(1)[0]
 
         # First cancel the order
-        resp = self.client.put(
-            f"{BASE_URL}/{order.id}/status",
-            json={"status": "Cancelled"},
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        if(order.status != OrderStatus.CANCELLED):
+            resp = self.client.put(
+                f"{BASE_URL}/{order.id}/status",
+                json={"status": "Cancelled"},
+                content_type="application/json",
+            )
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         # Try to update cancelled order's status
         resp = self.client.put(
