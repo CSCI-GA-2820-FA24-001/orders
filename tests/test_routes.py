@@ -625,7 +625,7 @@ class TestOrderService(TestCase):
         order = self._create_orders(1)[0]
 
         # First cancel the order
-        if(order.status != OrderStatus.CANCELLED):
+        if order.status != OrderStatus.CANCELLED:
             resp = self.client.put(
                 f"{BASE_URL}/{order.id}/status",
                 json={"status": "Cancelled"},
