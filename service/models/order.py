@@ -58,7 +58,6 @@ class Order(db.Model, PersistentBase):
                     self.status = Order_Status(data["status"].upper())
                 else:
                     self.status = Order_Status.CREATED
-                    
             except ValueError:
                 raise DataValidationError(f"Invalid status value '{data['status'].upper()}' not in Order_Status Enum")
 
