@@ -95,11 +95,7 @@ def list_orders():
     order_status = request.args.get("order_status")
     product_name = request.args.get("product_name")
 
-    orders = Order.find_by_filters(
-        customer_name=customer_name,
-        order_status=order_status,
-        product_name=product_name,
-    )
+    orders = Order.find_by_filters(customer_name=customer_name, order_status=order_status, product_name=product_name)
 
     # Return as an array of dictionaries
     results = [order.serialize() for order in orders]
@@ -151,7 +147,6 @@ def update_order(order_id):
     # Return the updated order
     return jsonify(order.serialize()), status.HTTP_200_OK
 
-
 @app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
 def cancel_order(order_id):
     """Cancels an order"""
@@ -160,6 +155,7 @@ def cancel_order(order_id):
     order = Order.find(order_id)
     if not order:
         abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+   
     app.logger.info(f"Changing status of order with order id:{order_id} to CANCELLED")
     order.status = Order_Status.CANCELLED
     order.update()
