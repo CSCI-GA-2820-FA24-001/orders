@@ -66,5 +66,8 @@ jobs:
           FLASK_APP: "wsgi:app"
           DATABASE_URI: "postgresql+psycopg://postgres:pgs3cr3t@postgres:5432/testdb"
           
-      - name: Upload code coverage
+      - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3.1.4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: CSCI-GA-2820-FA24-001/orders
