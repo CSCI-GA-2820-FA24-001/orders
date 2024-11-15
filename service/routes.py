@@ -27,6 +27,15 @@ from service.common import status  # HTTP Status Codes
 from service.models import Order, Item, OrderStatus  # Added Order_Status import
 
 
+############################################################
+# Health Endpoint
+############################################################
+@app.route("/health")
+def health():
+    """Health Status"""
+    return {"status": "OK"}, status.HTTP_200_OK
+
+
 ######################################################################
 # GET INDEX
 ######################################################################

@@ -22,7 +22,7 @@ spec:
       restartPolicy: Always
       containers:
       - name: orders
-        image: cluster-registry:5000/orders:latest
+        image: cluster-registry:5000/orders:1.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -33,6 +33,12 @@ spec:
               secretKeyRef:
                 name: postgres-creds
                 key: database_uri
+        readinessProbe:
+          initialDelaySeconds: 10
+          periodSeconds: 60
+          httpGet:
+            path: /health
+            port: 8080
         resources:
           limits:
             cpu: "0.50"
