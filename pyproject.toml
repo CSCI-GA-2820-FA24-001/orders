@@ -27,6 +27,11 @@ factory-boy = "^3.3.0"
 coverage = "^7.5.3"
 httpie = "^3.2.2"
 poetry-plugin-export = "^1.7.1"
+# Behavior-Driven Development
+behave = "^1.2.6"
+selenium = "4.16.0"
+requests = "^2.31.0"
+compare3 = "^1.0.4"
 
 [build-system]
 requires = ["poetry-core"]
@@ -35,7 +40,6 @@ build-backend = "poetry.core.masonry.api"
 #
 # Tool configurations
 #
-
 [tool.pylint.'MESSAGES CONTROL']
 max-line-length = 127
 disable = "no-member,protected-access,global-statement"
