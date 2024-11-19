@@ -31,3 +31,11 @@ Scenario: Delete an Order
     And I should see "499.99" in the "Price" field
     When I press the "Delete" button
     Then I should see the message "Order has been Deleted!"
+
+    Scenario: List all Orders
+    When I visit the "Home Page"
+    And I press the "Clear" button
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Jane Smith" in the results
+    And I should see "Bob Wilson" in the results
