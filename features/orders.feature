@@ -39,3 +39,41 @@ Scenario: Delete an Order
     Then I should see the message "Success"
     And I should see "Jane Smith" in the results
     And I should see "Bob Wilson" in the results
+
+Scenario: Create an Order
+    When I visit the "Home Page"
+    And I set the "Customer Name" to "Alice"
+    And I select "CREATED" in the "Status" dropdown
+    And I set the "Product Name" to "Apple"
+    And I set the "Quantity" to "1"
+    And I set the "Price" to "2"
+    And I press the "Create" button
+    Then I should see the message "Success"
+    When I copy the "ID" field
+    And I press the "Clear" button
+    And I paste the "ID" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "Alice" in the "Customer Name" field
+    And I should see "CREATED" in the "Status" field
+    And I should see "Apple" in the "Product Name" field
+    And I should see "2" in the "Price" field
+
+Scenario: Create an Order
+    When I visit the "Home Page"
+    And I set the "Customer Name" to "Alice"
+    And I select "CREATED" in the "Status" dropdown
+    And I set the "Product Name" to "Apple"
+    And I set the "Quantity" to "1"
+    And I set the "Price" to "2"
+    And I press the "Create" button
+    Then I should see the message "Success"
+    When I copy the "ID" field
+    And I press the "Clear" button
+    And I paste the "ID" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "Alice" in the "Customer Name" field
+    And I should see "CREATED" in the "Status" field
+    And I should see "Apple" in the "Product Name" field
+    And I should see "2" in the "Price" field
