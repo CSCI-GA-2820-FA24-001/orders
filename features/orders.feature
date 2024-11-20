@@ -59,3 +59,22 @@ Scenario: Create an Order
     And I should see "Device" in the "Product Name" field
     And I should see "2" in the "Quantity" field 
     And I should see "499.99" in the "Price" field
+
+Scenario: Update an Order
+    When I visit the "Home Page"
+    And I press the "Clear" button
+    And I press the "Search" button
+    Then I should see the message "Success"
+    When I copy the "ID" field
+    And I press the "Clear" button
+    And I paste the "ID" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    When I set the "Customer Name" to "Jane Doe"
+    And I press the "Update" button
+    Then I should see the message "Success"
+    When I press the "Clear" button
+    And I paste the "ID" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "Jane Doe" in the "Customer Name" field
