@@ -173,3 +173,9 @@ def step_impl(context, element_name, text_string):
     )
     element.clear()
     element.send_keys(text_string)
+
+@then('I should not see the copied "{element_name}" in results')
+def step_impl(context, element_name):
+    element = context.driver.find_element(By.ID, "search_results")
+    assert context.clipboard not in element.text, f"The {element_name} '{context.clipboard}' was found in the search results, but it should not be there."
+    print(f"Success: The {element_name} '{context.clipboard}' is not present in the search results as expected.")
