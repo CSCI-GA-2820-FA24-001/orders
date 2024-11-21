@@ -15,6 +15,7 @@ Scenario: The server is running
     Then I should see "Order Demo RESTful Service" in the title
     And I should not see "404 Not Found"
 
+# should delete also automatically show Cancelled order
 Scenario: Delete an Order
     When I visit the "Home Page"
     And I press the "Clear" button
@@ -31,6 +32,9 @@ Scenario: Delete an Order
     And I should see "499.99" in the "Price" field
     When I press the "Delete" button
     Then I should see the message "Order has been Deleted!"
+    When I press the "Clear" button
+    And I press the "Search" button
+    Then I should not see the copied "ID" in results
 
 Scenario: List all Orders
     When I visit the "Home Page"
