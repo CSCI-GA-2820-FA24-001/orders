@@ -15,7 +15,7 @@ Scenario: The server is running
     Then I should see "Order Demo RESTful Service" in the title
     And I should not see "404 Not Found"
 
-# should delete also automatically show Cancelled order
+# TODO  delete also automatically shows Cancelled order?
 Scenario: Delete an Order
     When I visit the "Home Page"
     And I press the "Clear" button
