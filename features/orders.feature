@@ -82,3 +82,43 @@ Scenario: Update an Order
     And I press the "Retrieve" button
     Then I should see the message "Success"
     And I should see "Jane Doe" in the "Customer Name" field
+
+Scenario: Query Orders by Various Criteria
+    When I visit the "Home Page"
+    And I press the "Clear" button
+    # Test filtering by customer name
+    When I set the "Customer Name" to "John Doe"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "John Doe" in the results
+    And I should not see "Jane Smith" in the results
+    And I should not see "Bob Wilson" in the results
+    
+    # Test filtering by status
+    When I press the "Clear" button
+    And I select "SHIPPED" in the "Status" dropdown
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Jane Smith" in the results
+    And I should not see "John Doe" in the results
+    And I should not see "Bob Wilson" in the results
+    
+    # Test filtering by product name
+    When I press the "Clear" button
+    And I set the "Product Name" to "Laptop"
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Bob Wilson" in the results
+    And I should not see "John Doe" in the results
+    And I should not see "Jane Smith" in the results
+    
+    # Test combined filters
+    When I press the "Clear" button
+    And I set the "Customer Name" to "Bob Wilson"
+    And I select "CANCELLED" in the "Status" dropdown
+    And I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "Bob Wilson" in the results
+    And I should see "CANCELLED" in the results
+    And I should not see "John Doe" in the results
+    And I should not see "Jane Smith" in the results
