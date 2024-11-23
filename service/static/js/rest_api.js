@@ -289,14 +289,10 @@ $(function () {
 
     // Updates the form with data from the response
     function update_item_form_data(res) {
-        // $("#order_id_item").val(res.id);
-        // if (res.items && res.items.length > 0) {
-        //     let item = res.items[0];
             $("#item_id").val(res.id);
             $("#item_product_name").val(res.product_name);
             $("#item_quantity").val(res.quantity);
             $("#item_price").val(res.price);
-        // }
     }
 
     // clears the item form data
@@ -485,7 +481,6 @@ $(function () {
             flash_item_message("len="+res.length)
             for(let i = 0; i < res.length; i++) {
                 let item = res[i];
-                // let item = order.items[0] || {}; // Get first item or empty object if no items
                 table += `<tr id="row_${i}">`;
                 table += `<td>${item.id}</td>`;
                 table += `<td>${item.product_name}</td>`;
