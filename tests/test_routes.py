@@ -18,7 +18,6 @@
 TestOrder API Service Test Suite
 """
 
-# pylint: disable=duplicate-code
 from datetime import datetime
 import os
 import logging
@@ -37,11 +36,10 @@ BASE_URL = "/orders"
 
 
 ######################################################################
-#  T E S T   C A S E S
+#  B A S E   T E S T   C A S E
 ######################################################################
-# pylint: disable=too-many-public-methods
-class TestOrderService(TestCase):
-    """REST API Server Tests"""
+class BaseTestCase(TestCase):
+    """Base Test Case that other test cases inherit from"""
 
     @classmethod
     def setUpClass(cls):
@@ -68,10 +66,6 @@ class TestOrderService(TestCase):
         """This runs after each test"""
         db.session.remove()
 
-    ######################################################################
-    #  H E L P E R   M E T H O D S
-    ######################################################################
-
     def _create_orders(self, count):
         """Factory method to create orders in bulk"""
         orders = []
@@ -88,9 +82,12 @@ class TestOrderService(TestCase):
             orders.append(order)
         return orders
 
-    ######################################################################
-    #  P L A C E   T E S T   C A S E S   H E R E
-    ######################################################################
+
+######################################################################
+#  T E S T   H O M E   P A G E
+######################################################################
+class TestHomePage(BaseTestCase):
+    """Test the Home Page and Health Endpoint"""
 
     def test_index(self):
         """It should call the home page"""
@@ -103,6 +100,13 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["status"], "OK")
+
+
+######################################################################
+#  T E S T   O R D E R   C R U D
+######################################################################
+class TestOrderCRUD(BaseTestCase):
+    """Test Order Create, Read, Update, Delete operations"""
 
     def test_create_order(self):
         """It should Create a new Order"""
@@ -184,6 +188,176 @@ class TestOrderService(TestCase):
         """It should not Read an Order that is not found"""
         resp = self.client.get(f"{BASE_URL}/0")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_order(self):
+        """It should Delete an entire order by order id"""
+        order = self._create_orders(1)[0]
+        resp = self.client.delete(f"{BASE_URL}/{order.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(resp.data), 0)
+        # make sure they are deleted
+        response = self.client.get(
+            f"{BASE_URL}/{order.id}", content_type="application/json"
+        )
+        self.assertEqual(
+            response.status_code, status.HTTP_404_NOT_FOUND
+        )  # 404 error after the fact
+
+    def test_delete_order_by_orderid_empty(self):
+        """It should return an error code when you try to delete an order which does not exist"""
+        resp = self.client.delete(f"{BASE_URL}/0")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_update_order_not_found(self):
+        """It should not Update an order that is not found"""
+        test_order = OrderFactory()
+        resp = self.client.put(f"{BASE_URL}/0", json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_order_bad_request(self):
+        """It should not Update an order with bad data"""
+        test_order = self._create_orders(1)[0]
+        resp = self.client.put(
+            f"{BASE_URL}/{test_order.id}", json={"bad_key": "bad_value"}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_cancel_order(self):
+        """It should cancel an existing Order"""
+        # Create an order to update
+        order = self._create_orders(1)[0]
+
+        # POST request to create the order
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        new_order = resp.get_json()
+        new_order_id = new_order["id"]
+
+        # Send a PUT request to cancel the order
+        resp = self.client.put(
+            f"{BASE_URL}/{new_order_id}/cancel",
+            json=new_order,
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        updated_order = resp.get_json()
+        self.assertEqual(updated_order["status"], "CANCELLED")
+
+    def test_cancel_order_not_found(self):
+        """It should not cancel an order that is not found"""
+        test_order = OrderFactory()
+        invalid_order_id = test_order.id - 1
+        resp = self.client.put(
+            f"{BASE_URL}/{invalid_order_id}/cancel", json=test_order.serialize()
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+
+######################################################################
+#  T E S T   O R D E R   Q U E R Y
+######################################################################
+class TestOrderQuery(BaseTestCase):
+    """Test Order Queries"""
+
+    def test_get_order_list(self):
+        """It should Get a list of Orders"""
+        self._create_orders(5)
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_get_order_list_empty(self):
+        """It should Get an empty list of Orders when no order is present"""
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+
+    def test_get_order_by_name(self):
+        """It should Get an Order by customer name"""
+        orders = self._create_orders(3)
+        resp = self.client.get(
+            BASE_URL, query_string=f"customer_name={orders[0].customer_name}"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data[0]["customer_name"], orders[0].customer_name)
+
+    def test_get_order_by_name_empty(self):
+        """It should not Get an empty list of Orders for customer_name that does not exist in db"""
+        customer_name = Faker("name")
+        resp = self.client.get(BASE_URL, query_string=f"customer_name={customer_name}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+
+    def test_get_order_list_by_name(self):
+        """It should Get a list of Orders by name"""
+        orders = self._create_orders(3)
+        test_name = orders[0].customer_name
+        name_orders = [order for order in orders if order.customer_name == test_name]
+        resp = self.client.get(BASE_URL, query_string=f"name={test_name}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), len(name_orders))
+        for order in data:
+            self.assertEqual(order["customer_name"], test_name)
+
+    def test_query_by_order_status(self):
+        """It should Query Orders by order status"""
+        orders = self._create_orders(5)
+        completed_orders = [
+            order for order in orders if order.status == OrderStatus.COMPLETED
+        ]
+        completed_count = len(completed_orders)
+        logging.debug("Completed Orders [%d] %s", completed_count, completed_orders)
+
+        # test for available
+        response = self.client.get(BASE_URL, query_string="order_status=completed")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), completed_count)
+        # check the data just to be sure
+        for order in data:
+            self.assertEqual(order["status"], OrderStatus.COMPLETED.value)
+
+    def test_get_order_by_product_name(self):
+        """It should Get Orders by product name"""
+        order = self._create_orders(3)[0]
+        item = ItemFactory.create()
+        resp = self.client.post(f"{BASE_URL}/{order.id}/items", json=item.serialize())
+        resp = self.client.get(
+            BASE_URL, query_string=f"product_name={item.product_name}"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], order.id)
+
+    def test_get_order_by_product_name_empty(self):
+        """It should Get an empty list of Orders for product_name that does not exist in db"""
+        order = self._create_orders(3)[0]
+        item = ItemFactory.create()
+        item.product_name = "productA"
+        resp = self.client.post(f"{BASE_URL}/{order.id}/items", json=item.serialize())
+
+        resp = self.client.get(BASE_URL, query_string="product_name=productB")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+
+
+######################################################################
+#  T E S T   I T E M   C R U D
+######################################################################
+class TestItemCRUD(BaseTestCase):
+    """Test Item Create, Read, Update, Delete operations within an Order"""
 
     def test_add_item(self):
         """It should add an item to an order"""
@@ -304,39 +478,6 @@ class TestOrderService(TestCase):
         self.assertEqual(returned_created_at, item_created_at)
         self.assertEqual(returned_updated_at, item_updated_at)
 
-    def test_get_order_list(self):
-        """It should Get a list of Orders"""
-        self._create_orders(5)
-        resp = self.client.get(BASE_URL)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(len(data), 5)
-
-    def test_get_order_list_empty(self):
-        """It should Get an empty list of Orders when no order is present"""
-        resp = self.client.get(BASE_URL)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(len(data), 0)
-
-    def test_get_order_by_name(self):
-        """It should Get an Order by customer name"""
-        orders = self._create_orders(3)
-        resp = self.client.get(
-            BASE_URL, query_string=f"customer_name={orders[0].customer_name}"
-        )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(data[0]["customer_name"], orders[0].customer_name)
-
-    def test_get_order_by_name_empty(self):
-        """It should not Get an empty list of Orders for customer_name that does not exist in db"""
-        customer_name = Faker("name")
-        resp = self.client.get(BASE_URL, query_string=f"customer_name={customer_name}")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(len(data), 0)
-
     def test_get_items_in_list(self):
         """It should Get a list of Items in an order with order_id"""
         # add two items to order
@@ -363,25 +504,6 @@ class TestOrderService(TestCase):
         self.assertEqual(len(data), 2)
         self.assertEqual(data[0]["product_name"], item_list[0].product_name)
         self.assertEqual(data[1]["product_name"], item_list[1].product_name)
-
-    def test_delete_order(self):
-        """It should Delete an entire order by order id"""
-        order = self._create_orders(1)[0]
-        resp = self.client.delete(f"{BASE_URL}/{order.id}")
-        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(len(resp.data), 0)
-        # make sure they are deleted
-        response = self.client.get(
-            f"{BASE_URL}/{order.id}", content_type="application/json"
-        )
-        self.assertEqual(
-            response.status_code, status.HTTP_404_NOT_FOUND
-        )  # 404 error after the fact
-
-    def test_delete_order_by_orderid_empty(self):
-        """It should return an error code when you try to delete an order which does not exist"""
-        resp = self.client.delete(f"{BASE_URL}/0")
-        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_update_item(self):
         """It should update an item in an existing Order"""
@@ -491,32 +613,6 @@ class TestOrderService(TestCase):
         resp = self.client.delete(f"{BASE_URL}/{order.id}/items/0")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
-    def test_get_order_list_by_name(self):
-        """It should Get a list of Orders by name"""
-        orders = self._create_orders(3)
-        test_name = orders[0].customer_name
-        name_orders = [order for order in orders if order.customer_name == test_name]
-        resp = self.client.get(BASE_URL, query_string=f"name={test_name}")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(len(data), len(name_orders))
-        for order in data:
-            self.assertEqual(order["customer_name"], test_name)
-
-    def test_update_order_not_found(self):
-        """It should not Update an order that is not found"""
-        test_order = OrderFactory()
-        resp = self.client.put(f"{BASE_URL}/0", json=test_order.serialize())
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_update_order_bad_request(self):
-        """It should not Update an order with bad data"""
-        test_order = self._create_orders(1)[0]
-        resp = self.client.put(
-            f"{BASE_URL}/{test_order.id}", json={"bad_key": "bad_value"}
-        )
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
     def test_get_item_list_order_not_found(self):
         """It should return 404 when trying to get items for a non-existent order"""
         resp = self.client.get(f"{BASE_URL}/0/items")
@@ -561,36 +657,12 @@ class TestOrderService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-    # ----------------------------------------------------------
-    # TEST QUERY
-    # ----------------------------------------------------------
-    def test_query_by_order_status(self):
-        """It should Query Orders by order status"""
-        orders = self._create_orders(5)
-        completed_orders = [
-            order for order in orders if order.status == OrderStatus.COMPLETED
-        ]
-        completed_count = len(completed_orders)
-        logging.debug("Completed Orders [%d] %s", completed_count, completed_orders)
 
-        # test for available
-        response = self.client.get(BASE_URL, query_string="order_status=completed")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.get_json()
-        self.assertEqual(len(data), completed_count)
-        # check the data just to be sure
-        for order in data:
-            self.assertEqual(order["status"], OrderStatus.COMPLETED.value)
-
-    def test_create_order_bad_order_status(self):
-        """It should not Create an Order with bad order status data"""
-        order = OrderFactory()
-        logging.debug(order)
-        # change status to a bad string
-        test_order = order.serialize()
-        test_order["status"] = "INVALID_STATUS"  # invalid status
-        response = self.client.post(BASE_URL, json=test_order)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+######################################################################
+#  T E S T   O R D E R   S T A T U S   U P D A T E S
+######################################################################
+class TestOrderStatusUpdates(BaseTestCase):
+    """Test Order Status Updates"""
 
     def test_update_order_status(self):
         """It should update an order's status"""
@@ -677,62 +749,19 @@ class TestOrderService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_get_order_by_product_name(self):
-        """It should Get Orders by product name"""
-        order = self._create_orders(3)[0]
-        item = ItemFactory.create()
-        resp = self.client.post(f"{BASE_URL}/{order.id}/items", json=item.serialize())
-        resp = self.client.get(
-            BASE_URL, query_string=f"product_name={item.product_name}"
-        )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["id"], order.id)
 
-    def test_get_order_by_product_name_empty(self):
-        """It should Get an empty list of Orders for product_name that does not exist in db"""
-        order = self._create_orders(3)[0]
-        item = ItemFactory.create()
-        item.product_name = "productA"
-        resp = self.client.post(f"{BASE_URL}/{order.id}/items", json=item.serialize())
+######################################################################
+#  T E S T   E R R O R   H A N D L I N G
+######################################################################
+class TestErrorHandling(BaseTestCase):
+    """Test Error Handling"""
 
-        resp = self.client.get(BASE_URL, query_string="product_name=productB")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(len(data), 0)
-
-    def test_cancel_order(self):
-        """It should cancel an existing Order"""
-        # Create an order to update
-        order = self._create_orders(1)[0]
-
-        # POST request to create the order
-        resp = self.client.post(
-            BASE_URL, json=order.serialize(), content_type="application/json"
-        )
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-
-        new_order = resp.get_json()
-        new_order_id = new_order["id"]
-
-        # Send a PUT request to update the order
-        resp = self.client.put(
-            f"{BASE_URL}/{new_order_id}/cancel",
-            json=new_order,
-            content_type="application/json",
-        )
-
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-        updated_order = resp.get_json()
-        self.assertEqual(updated_order["status"], "CANCELLED")
-
-    def test_cancel_order_not_found(self):
-        """It should not cancel an order that is not found"""
-        test_order = OrderFactory()
-        invalid_order_id = test_order.id - 1
-        resp = self.client.put(
-            f"{BASE_URL}/{invalid_order_id}/cancel", json=test_order.serialize()
-        )
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+    def test_create_order_bad_order_status(self):
+        """It should not Create an Order with bad order status data"""
+        order = OrderFactory()
+        logging.debug(order)
+        # change status to a bad string
+        test_order = order.serialize()
+        test_order["status"] = "INVALID_STATUS"  # invalid status
+        response = self.client.post(BASE_URL, json=test_order)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
