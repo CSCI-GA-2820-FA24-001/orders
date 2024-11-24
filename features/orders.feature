@@ -5,7 +5,7 @@ Feature: The order service back-end
 
 Background:
     Given the following orders
-        | customer_name | status    | product_name | quantity | price   |
+        | customer_name | status   | product_name | quantity | price   |
         | John Doe     | CREATED   | Device       | 2        | 499.99  |
         | Jane Smith   | SHIPPED   | Book         | 1        | 29.99   |
         | Bob Wilson   | CANCELLED | Laptop       | 1        | 999.99  |
@@ -21,20 +21,20 @@ Scenario: Delete an Order
     And I press the "Clear" button
     And I press the "Search" button
     Then I should see the message "Success"
-    When I copy the "ID" field
+    When I copy the "Order ID" field
     And I press the "Clear" button
-    And I paste the "ID" field
+    And I paste the "Order ID" field
     And I press the "Retrieve" button
     Then I should see the message "Success"
-    And I should see "John Doe" in the "Customer Name" field
-    And I should see "CREATED" in the "Status" field
-    And I should see "Device" in the "Product Name" field
-    And I should see "499.99" in the "Price" field
+    And I should see "John Doe" in the "Order Customer Name" field
+    And I should see "CREATED" in the "Order Status" field
+    And I should see "Device" in the "Order Product Name" field
+    And I should see "499.99" in the "Order Price" field
     When I press the "Delete" button
     Then I should see the message "Order has been Deleted!"
     When I press the "Clear" button
     And I press the "Search" button
-    Then I should not see the copied "ID" in results
+    Then I should not see the copied "Order ID" in results
 
 Scenario: List all Orders
     When I visit the "Home Page"
@@ -46,66 +46,66 @@ Scenario: List all Orders
 
 Scenario: Create an Order
     When I visit the "Home Page"
-    And I set the "Customer Name" to "John Doe"
-    And I select "CREATED" in the "Status" dropdown
-    And I set the "Product Name" to "Device"
-    And I set the "Quantity" to "2"
-    And I set the "Price" to "499.99"
+    And I set the "Order Customer Name" to "John Doe"
+    And I select "CREATED" in the "Order Status" dropdown
+    And I set the "Order Product Name" to "Device"
+    And I set the "Order Quantity" to "2"
+    And I set the "Order Price" to "499.99"
     And I press the "Create" button
     Then I should see the message "Success"
-    When I copy the "ID" field
+    When I copy the "Order ID" field
     And I press the "Clear" button
-    And I paste the "ID" field
+    And I paste the "Order ID" field
     And I press the "Retrieve" button
     Then I should see the message "Success"
-    And I should see "John Doe" in the "Customer Name" field
-    And I should see "CREATED" in the "Status" field
-    And I should see "Device" in the "Product Name" field
-    And I should see "2" in the "Quantity" field 
-    And I should see "499.99" in the "Price" field
+    And I should see "John Doe" in the "Order Customer Name" field
+    And I should see "CREATED" in the "Order Status" field
+    And I should see "Device" in the "Order Product Name" field
+    And I should see "2" in the "Order Quantity" field 
+    And I should see "499.99" in the "Order Price" field
 
 Scenario: Update an Order
     When I visit the "Home Page"
     And I press the "Clear" button
     And I press the "Search" button
     Then I should see the message "Success"
-    When I copy the "ID" field
+    When I copy the "Order ID" field
     And I press the "Clear" button
-    And I paste the "ID" field
+    And I paste the "Order ID" field
     And I press the "Retrieve" button
     Then I should see the message "Success"
-    When I set the "Customer Name" to "Jane Doe"
+    When I set the "Order Customer Name" to "Jane Doe"
     And I press the "Update" button
     Then I should see the message "Success"
     When I press the "Clear" button
-    And I paste the "ID" field
+    And I paste the "Order ID" field
     And I press the "Retrieve" button
     Then I should see the message "Success"
-    And I should see "Jane Doe" in the "Customer Name" field
+    And I should see "Jane Doe" in the "Order Customer Name" field
 
 Scenario: Query Orders by Various Criteria
     When I visit the "Home Page"
     And I press the "Clear" button
-    # Test filtering by customer name
-    When I set the "Customer Name" to "John Doe"
+    # Test filtering by Order Customer Name
+    When I set the "Order Customer Name" to "John Doe"
     And I press the "Search" button
     Then I should see the message "Success"
     And I should see "John Doe" in the results
     And I should not see "Jane Smith" in the results
     And I should not see "Bob Wilson" in the results
     
-    # Test filtering by status
+    # Test filtering by Order Status
     When I press the "Clear" button
-    And I select "SHIPPED" in the "Status" dropdown
+    And I select "SHIPPED" in the "Order Status" dropdown
     And I press the "Search" button
     Then I should see the message "Success"
     And I should see "Jane Smith" in the results
     And I should not see "John Doe" in the results
     And I should not see "Bob Wilson" in the results
     
-    # Test filtering by product name
+    # Test filtering by Order Product Name
     When I press the "Clear" button
-    And I set the "Product Name" to "Laptop"
+    And I set the "Order Product Name" to "Laptop"
     And I press the "Search" button
     Then I should see the message "Success"
     And I should see "Bob Wilson" in the results
@@ -114,8 +114,8 @@ Scenario: Query Orders by Various Criteria
     
     # Test combined filters
     When I press the "Clear" button
-    And I set the "Customer Name" to "Bob Wilson"
-    And I select "CANCELLED" in the "Status" dropdown
+    And I set the "Order Customer Name" to "Bob Wilson"
+    And I select "CANCELLED" in the "Order Status" dropdown
     And I press the "Search" button
     Then I should see the message "Success"
     And I should see "Bob Wilson" in the results
@@ -128,19 +128,36 @@ Scenario: Cancel an Order
     And I press the "Clear" button
     And I press the "Search" button
     Then I should see the message "Success"
-    When I copy the "ID" field
+    When I copy the "Order ID" field
     And I press the "Clear" button
-    And I paste the "ID" field
+    And I paste the "Order ID" field
     And I press the "Retrieve" button
     Then I should see the message "Success"
-    And I should see "John Doe" in the "Customer Name" field
-    And I should see "CREATED" in the "Status" field
+    And I should see "John Doe" in the "Order Customer Name" field
+    And I should see "CREATED" in the "Order Status" field
     When I press the "Cancel" button
     Then I should see the message "Success"
-    And I should see "CANCELLED" in the "Status" field
+    And I should see "CANCELLED" in the "Order Status" field
     # Verify the order remains cancelled after refresh
     When I press the "Clear" button
-    And I paste the "ID" field
+    And I paste the "Order ID" field
     And I press the "Retrieve" button
     Then I should see the message "Success"
-    And I should see "CANCELLED" in the "Status" field
+    And I should see "CANCELLED" in the "Order Status" field
+
+Scenario: Read an Item
+    When I visit the "Home Page"
+    And I press the "Clear" button
+    And I press the "Search" button
+    Then I should see the message "Success"
+    When I copy the "Order ID" field
+    And I paste the "Order ID Item" field 
+    And I press the "Search Item" button
+    Then I should see the message "Success"
+    When I leave the "Item Product Name" field empty
+    And I leave the "Item Quantity" field empty
+    And I leave the "Item Price" field empty
+    And I press the "Retrieve Item" button
+    Then I should see "Device" in the "Item Product Name" field
+    And I should see "2" in the "Item Quantity" field
+    And I should see "499.99" in the "Item Price" field
