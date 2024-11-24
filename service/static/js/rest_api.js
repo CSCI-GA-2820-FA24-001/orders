@@ -349,7 +349,7 @@ $(function () {
     // Update an Order
     // ****************************************
 
-    $("#update-btn-item").click(function () {
+    $("#update-item-btn").click(function () {
         let order_id = $("#order_id_item").val();
         let item_id = $("#item_id").val();
         let product_name = $("#item_product_name").val();
