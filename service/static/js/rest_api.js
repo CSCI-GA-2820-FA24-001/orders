@@ -410,7 +410,7 @@ $(function () {
     });
 
     // ****************************************
-    // Delete an Order
+    // Delete an item in Order
     // ****************************************
 
     $("#delete-item-btn").click(function () {

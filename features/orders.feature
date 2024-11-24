@@ -158,6 +158,26 @@ Scenario: Read an Item
     And I leave the "Item Quantity" field empty
     And I leave the "Item Price" field empty
     And I press the "Retrieve Item" button
-    Then I should see "Device" in the "Item Product Name" field
+    Then I should see the message "Success" in the item form
+    And I should see "Device" in the "Item Product Name" field
     And I should see "2" in the "Item Quantity" field
     And I should see "499.99" in the "Item Price" field
+
+Scenario: Delete an Item
+    When I visit the "Home Page"
+    And I press the "Clear" button
+    And I press the "Search" button
+    Then I should see the message "Success"
+    When I copy the "Order ID" field
+    And I paste the "Order ID Item" field 
+    And I press the "Search Item" button
+    Then I should see the message "Success"
+    And I should see "Device" in the "Item Product Name" field
+    And I should see "2" in the "Item Quantity" field
+    And I should see "499.99" in the "Item Price" field
+    When I copy the "Item ID" field
+    And I leave the "Item Product Name" field empty
+    And I leave the "Item Quantity" field empty
+    And I leave the "Item Price" field empty
+    And I press the "Delete Item" button
+    Then I should see the message "Item has been Deleted!" in the item form

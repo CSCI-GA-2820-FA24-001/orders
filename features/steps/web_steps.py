@@ -191,3 +191,22 @@ def step_impl(context, element_name):
         expected_conditions.presence_of_element_located((By.ID, element_id))
     )
     element.clear()
+
+@then('I should see the message "{message}" in the item form')
+def step_impl(context, message):
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, "flash_message_item"), message
+        )
+    )
+    assert found
+
+@then('I should not see the copied "{element_name}" in item search results')
+def step_impl(context, element_name):
+    element = context.driver.find_element(By.ID, "search_results_item")
+    assert (
+        context.clipboard not in element.text
+    ), f"The {element_name} '{context.clipboard}' was found in the search results, but it should not be there."
+    print(
+        f"Success: The {element_name} '{context.clipboard}' is not present in the search results as expected."
+    )
