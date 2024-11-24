@@ -23,6 +23,13 @@ def before_all(context):
     context.config.setup_logging()
 
 
+def before_scenario(context, scenario):
+    """Executed before each scenario - reset browser state"""
+    context.driver.delete_all_cookies()
+    context.driver.get(context.base_url)  # 回到主页
+    context.driver.refresh()  # 刷新页面
+
+
 def after_all(context):
     """Executed after all tests"""
     context.driver.quit()
@@ -38,6 +45,7 @@ def get_chrome():
     options = webdriver.ChromeOptions()
     options.add_argument("--no-sandbox")
     options.add_argument("--headless")
+    options.add_argument("--disable-dev-shm-usage")
     return webdriver.Chrome(options=options)
 
 

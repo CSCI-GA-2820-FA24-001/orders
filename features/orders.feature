@@ -122,3 +122,25 @@ Scenario: Query Orders by Various Criteria
     And I should see "CANCELLED" in the results
     And I should not see "John Doe" in the results
     And I should not see "Jane Smith" in the results
+
+Scenario: Cancel an Order
+    When I visit the "Home Page"
+    And I press the "Clear" button
+    And I press the "Search" button
+    Then I should see the message "Success"
+    When I copy the "ID" field
+    And I press the "Clear" button
+    And I paste the "ID" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "John Doe" in the "Customer Name" field
+    And I should see "CREATED" in the "Status" field
+    When I press the "Cancel" button
+    Then I should see the message "Success"
+    And I should see "CANCELLED" in the "Status" field
+    # Verify the order remains cancelled after refresh
+    When I press the "Clear" button
+    And I paste the "ID" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "CANCELLED" in the "Status" field
