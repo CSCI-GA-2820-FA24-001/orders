@@ -36,9 +36,6 @@ BASE_URL = "/orders"
 
 
 ######################################################################
-#  B A S E   T E S T   C A S E
-######################################################################
-######################################################################
 # Base Test Case Module
 ######################################################################
 
@@ -50,7 +47,9 @@ import logging
 import os
 from unittest import TestCase
 from wsgi import app
-from service.models import db
+from service.models import db, Order
+from service.common import status
+from tests.factories import OrderFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -78,7 +77,7 @@ class BaseTestCase(TestCase):
     def setUp(self):
         """Runs before each test"""
         self.client = app.test_client()
-        db.session.query(db.Model).delete()  # clean up the last tests
+        db.session.query(Order).delete()  # clean up the last tests
         db.session.commit()
 
     def tearDown(self):
@@ -87,9 +86,6 @@ class BaseTestCase(TestCase):
 
     def _create_orders(self, count):
         """Factory method to create orders in bulk"""
-        from tests.factories import OrderFactory
-        from service.common import status
-
         orders = []
         for _ in range(count):
             order = OrderFactory()
