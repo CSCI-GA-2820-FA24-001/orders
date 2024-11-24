@@ -38,6 +38,25 @@ BASE_URL = "/orders"
 ######################################################################
 #  B A S E   T E S T   C A S E
 ######################################################################
+######################################################################
+# Base Test Case Module
+######################################################################
+
+"""
+Common Base Test Case for Order API Tests
+"""
+
+import logging
+import os
+from unittest import TestCase
+from wsgi import app
+from service.models import db
+
+DATABASE_URI = os.getenv(
+    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
+)
+
+
 class BaseTestCase(TestCase):
     """Base Test Case that other test cases inherit from"""
 
@@ -59,7 +78,7 @@ class BaseTestCase(TestCase):
     def setUp(self):
         """Runs before each test"""
         self.client = app.test_client()
-        db.session.query(Order).delete()  # clean up the last tests
+        db.session.query(db.Model).delete()  # clean up the last tests
         db.session.commit()
 
     def tearDown(self):
@@ -68,10 +87,13 @@ class BaseTestCase(TestCase):
 
     def _create_orders(self, count):
         """Factory method to create orders in bulk"""
+        from tests.factories import OrderFactory
+        from service.common import status
+
         orders = []
         for _ in range(count):
             order = OrderFactory()
-            resp = self.client.post(BASE_URL, json=order.serialize())
+            resp = self.client.post("/orders", json=order.serialize())
             self.assertEqual(
                 resp.status_code,
                 status.HTTP_201_CREATED,
