@@ -26,8 +26,8 @@ def before_all(context):
 def before_scenario(context, scenario):
     """Executed before each scenario - reset browser state"""
     context.driver.delete_all_cookies()
-    context.driver.get(context.base_url)  # 回到主页
-    context.driver.refresh()  # 刷新页面
+    context.driver.get(context.base_url)
+    context.driver.refresh()
 
 
 def after_all(context):
