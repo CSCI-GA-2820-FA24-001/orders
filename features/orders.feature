@@ -175,6 +175,12 @@ Scenario: Delete an Item
     And I should see "Device" in the "Item Product Name" field
     And I should see "2" in the "Item Quantity" field
     And I should see "499.99" in the "Item Price" field
+    When I copy the "Item ID" field
+    And I leave the "Item Product Name" field empty
+    And I leave the "Item Quantity" field empty
+    And I leave the "Item Price" field empty
+    And I press the "Delete Item" button
+    Then I should see the message "Item has been Deleted!" in the item form
 
 Scenario: Update an Item
     When I visit the "Home Page"
