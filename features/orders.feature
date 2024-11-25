@@ -182,6 +182,25 @@ Scenario: Delete an Item
     And I press the "Delete Item" button
     Then I should see the message "Item has been Deleted!" in the item form
 
+Scenario: Update an Item
+    When I visit the "Home Page"
+    And I press the "Clear" button
+    And I press the "Search" button
+    Then I should see the message "Success"
+    When I copy the "Order ID" field
+    And I paste the "Order ID Item" field 
+    And I press the "Search Item" button
+    Then I should see the message "Success"
+    Then I should see "499.99" in the "Item Price" field
+    When I set the "Item Price" to "600.00"
+    And I press the "Update Item" button
+    Then I should see the message "Success"
+    When I press the "Clear Item" button
+    And I copy the "Order ID" field
+    And I paste the "Order ID Item" field
+    And I press the "Search Item" button
+    Then I should see "600.00" in the "Item Price" field
+
 Scenario: Read an Order
     When I visit the "Home Page"
     And I press the "Clear" button
