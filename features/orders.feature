@@ -200,3 +200,19 @@ Scenario: Update an Item
     And I paste the "Order ID Item" field
     And I press the "Search Item" button
     Then I should see "600.00" in the "Item Price" field
+
+Scenario: Read an Order
+    When I visit the "Home Page"
+    And I press the "Clear" button
+    And I press the "Search" button
+    Then I should see the message "Success"
+    When I copy the "Order ID" field
+    And I press the "Clear" button
+    And I paste the "Order ID" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "John Doe" in the "Order Customer Name" field
+    And I should see "CREATED" in the "Order Status" field
+    And I should see "Device" in the "Order Product Name" field
+    And I should see "2" in the "Order Quantity" field
+    And I should see "499.99" in the "Order Price" field
