@@ -232,13 +232,10 @@ Scenario: Create an Item
     And I press the "Create Item" button
     Then I should see the message "Success"
     #Verify that the item has been created
-    When I copy the "Order ID Item" field
-    And I press the "Clear Item" button
-    # When I copy the "Order ID" field
-    # And I press the "Clear Item" button
-    And I paste the "Order ID Item" field 
-    And I press the "Search Item" button
-    Then I should see the message "Success"
-    And I should see "Apple" in the "Item Product Name" field
+    When I leave the "Item Product Name" field empty
+    And I leave the "Item Quantity" field empty
+    And I leave the "Item Price" field empty
+    And I press the "Retrieve Item" button
+    Then I should see "Apple" in the "Item Product Name" field
     And I should see "2" in the "Item Quantity" field
     And I should see "5.00" in the "Item Price" field
