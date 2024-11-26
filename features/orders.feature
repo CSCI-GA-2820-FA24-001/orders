@@ -217,7 +217,6 @@ Scenario: Read an Order
     And I should see "2" in the "Order Quantity" field
     And I should see "499.99" in the "Order Price" field
 
-
 Scenario: Create an Item
     When I visit the "Home Page"
     And I press the "Clear" button
@@ -225,20 +224,21 @@ Scenario: Create an Item
     Then I should see the message "Success"
     When I copy the "Order ID" field
     And I paste the "Order ID Item" field
-    And I press the "Search Item" button
     Then I should see the message "Success"
-    When I set the "Item Product Name" field to "App"
-    And I set the "Item Quantity" field to "2"
-    And I set the "Item Price" field to "5.00"
+    When I set the "Item ID" to "100"
+    And I set the "Item Product Name" to "Apple"
+    And I set the "Item Quantity" to "2"
+    And I set the "Item Price" to "5.00"
     And I press the "Create Item" button
     Then I should see the message "Success"
-    # Verify the item has been created 
-    When I press the "Clear Item" button
-    When I copy the "Order ID" field
-    And I paste the "Order ID Item" field
-    And I press the "Search Items" button
+    #Verify that the item has been created
+    When I copy the "Order ID Item" field
+    And I press the "Clear Item" button
+    # When I copy the "Order ID" field
+    # And I press the "Clear Item" button
+    And I paste the "Order ID Item" field 
+    And I press the "Search Item" button
     Then I should see the message "Success"
-    And I should see "817" in the "Item Id" field
-    And I should see "App" in the "Item Product Name" field
+    And I should see "Apple" in the "Item Product Name" field
     And I should see "2" in the "Item Quantity" field
-    And I should see "2.00" in the "Item Price" field
+    And I should see "5.00" in the "Item Price" field
