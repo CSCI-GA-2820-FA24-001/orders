@@ -2517,3 +2517,14 @@ type = ["pytest-mypy"]
 lock-version = "2.0"
 python-versions = "^3.11"
 content-hash = "9cb2eb7f40638a0a88d639509d7a4f2a4d492a5ca89469cecce31a6bb657b410"
+
+[[package]]
+name = "flask-restx"
+version = "1.3.0"
+description = "Fully featured framework for fast, easy and documented API development with Flask"
+optional = false
+python-versions = "*"
+files = [
+    {file = "flask-restx-1.3.0.tar.gz", hash = "sha256:4f3d3fa7b6191fcc715b18c201a12cd875176f92ba4acc61626ccfd571ee1728"},
+    {file = "flask_restx-1.3.0-py2.py3-none-any.whl", hash = "sha256:636c56c3fb3f2c1df979e748019f084a938c4da2035a3e535a4673e4fc177691"},
+]

@@ -96,3 +96,11 @@ class PersistentBase:
         logger.info("Processing lookup for id %s ...", by_id)
         # pylint: disable=no-member
         return cls.query.session.get(cls, by_id)
+
+    @classmethod
+    def remove_all(cls):
+        """Deleted all of the records in the database"""
+        logger.info("Processing all records")
+        # pylint: disable=no-member
+        for row in cls.query.all():
+            row.delete()

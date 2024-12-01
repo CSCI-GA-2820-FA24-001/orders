@@ -3,5 +3,6 @@
         "sqlalchemy",
         "psycopg",
         "testdb"
-    ]
+    ],
+    "makefile.configureOnOpen": false
 }

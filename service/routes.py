@@ -15,16 +15,19 @@
 ######################################################################
 
 """
-Order Service
+Order Service with Swagger
 
 This service implements a REST API that allows you to Create, Read, Update
 and Delete Order
 """
 
-from flask import jsonify, request, url_for, abort
+from functools import wraps
+from flask import request
 from flask import current_app as app  # Import Flask application
+from flask_restx import Resource, fields, reqparse, inputs
+from service.models import Order, Item, OrderStatus
 from service.common import status  # HTTP Status Codes
-from service.models import Order, Item, OrderStatus  # Added Order_Status import
+from . import api
 
 
 ############################################################
@@ -45,68 +48,362 @@ def index():
     return app.send_static_file("index.html")
 
 
+# Define the model so that the docs reflect what can be sent
+base_item_model = api.model(
+    "Item",
+    {
+        "order_id": fields.Integer(required=True, description="The id of order"),   
+        "product_name": fields.String(required=True, description="The name of the product"),
+        "quantity": fields.Integer(
+            required=True, description="Quantity of item"
+        ),
+        # pylint: disable=protected-access
+        "price": fields.Float(
+            required=True, description="Price of quantity of item"
+        ),
+    },
+)
+
+item_model = api.inherit(
+    "ItemModel",
+    base_item_model,
+    {
+        "_id": fields.Integer(
+            readOnly=True, description="The unique id assigned internally by service"
+        ),
+    },
+)
+
+# Define the model so that the docs reflect what can be sent
+base_order_model = api.model(
+    "Order",
+    {
+        "customer_name": fields.String(required=True, description="The name of the customer"),
+        "status": fields.String(
+            enum=OrderStatus._member_names_, description="Status of the order"
+        ),
+        # pylint: disable=protected-access
+        "items": fields.List(
+            fields.Nested(item_model), description="The list of items in the Order"
+        ),
+    },
+)
+
+order_model = api.inherit(
+    "OrderModel",
+    base_order_model,
+    {
+        "_id": fields.Integer(
+            readOnly=True, description="The unique id assigned internally by service"
+        ),
+    },
+)
+
+# query string arguments: customer_name, order_status and product_name
+order_args = reqparse.RequestParser()
+order_args.add_argument(
+    "customer_name", type=str, location="args", required=False, help="List orders by customer name"
+)
+order_args.add_argument(
+    "status", type=str, location="args", required=False, help="List orders by status"
+)
+order_args.add_argument(
+    "product_name", type=str, location="args", required=False, help="List orders by product_name in items"
+)
+
+
+######################################################################
+#  PATH: /orders/<int:order_id>
+######################################################################
+@api.route("/orders/<int:order_id>")
+@api.param("order_id", "The order identifier")
+class OrderResource(Resource):
+    """
+    OrderResource class
+
+    Allows the manipulation of a single Order
+    GET /order{id} - Returns an Order with the id
+    PUT /order{id} - Update an Order with the id
+    DELETE /order{id} -  Deletes an Order with the id
+    """
+
+    # ------------------------------------------------------------------
+    # RETRIEVE AN ORDER
+    # ------------------------------------------------------------------
+    @api.doc("get_order")
+    @api.response(404, "Order not found")
+    @api.marshal_with(order_model)
+    def get(self, order_id):
+        """Retrieve a single order"""
+        app.logger.info("Request for Order with id: %s", order_id)
+
+        # See if the order exists and abort if it doesn't
+        order = Order.find(order_id)
+        if not order:
+            abort(
+                status.HTTP_404_NOT_FOUND,
+                f"Order with id '{order_id}' could not be found.",
+            )
+
+        return order.serialize(), status.HTTP_200_OK
+
+    # ------------------------------------------------------------------
+    # UPDATE AN EXISTING ORDER
+    # ------------------------------------------------------------------
+    @api.doc("update_order")
+    @api.response(404, "Order not found")
+    @api.response(400, "The posted Order data was not valid")
+    @api.expect(order_model)
+    @api.marshal_with(order_model)
+    def put(self, order_id):
+        """Updates an order"""
+        app.logger.info(f"Request to update order id:{order_id}")
+        # Check if order exists
+        order = Order.find(order_id)
+        if not order:
+            abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+        # Update order with info in the json request
+        data = api.payload
+        app.logger.debug("Payload received for update: %s", data)
+        order.deserialize(data)
+        order.id = order_id
+        order.update()
+        # Return the updated order
+        return order.serialize(), status.HTTP_200_OK
+
+    # ------------------------------------------------------------------
+    # DELETE AN ORDER
+    # ------------------------------------------------------------------
+    @api.doc("delete_order")
+    @api.response(204, "Order deleted")
+    def delete(self, order_id):
+        """Delete an entire order"""
+        app.logger.info("Request to delete an entire order with order id: %s", order_id)
+
+        # See if the order first exists
+        order = Order.find(order_id)
+        if order:
+            order.delete()
+
+        return "", status.HTTP_204_NO_CONTENT
+
+######################################################################
+#  PATH: /orders
+######################################################################
+@api.route("/orders", strict_slashes=False)
+class OrderCollection(Resource):
+    """Handles all interactions with collections of Pets"""
+
+    # ------------------------------------------------------------------
+    # LIST ALL ORDERS
+    # ------------------------------------------------------------------
+    @api.doc("list_orders")
+    @api.expect(order_args, validate=True)
+    @api.marshal_list_with(order_model)
+    def get(self):
+        """Returns all of the Orders"""
+        app.logger.info("Request to list Orders...")
+        orders = []
+        args = order_args.parse_args()
+        customer_name = args["name"]
+        order_status = args.get["order_status"]
+        product_name = args["product_name"]
+        
+        orders = Order.find_by_filters(
+            customer_name=customer_name,
+            order_status=order_status,
+            product_name=product_name,
+        )
+
+        # Return as an array of dictionaries
+        results = [order.serialize() for order in orders]
+        return results, status.HTTP_200_OK
+        
+    # ------------------------------------------------------------------
+    # ADD A NEW ORDER
+    # ------------------------------------------------------------------
+    @api.doc("create_order")
+    @api.response(400, "The posted data was not valid")
+    @api.expect(base_order_model)
+    @api.marshal_with(order_model, code=201)
+    def post(self):
+        """Create an Order"""
+        app.logger.info("Request to create an Order")
+
+        # Create the order
+        order = Order()
+        order.deserialize(api.payload)
+        order.create()
+
+        # Create a message to return
+        message = order.serialize()
+        location_url = api.url_for(OrderResource, order_id=order.id, _external=True)
+
+        return message, status.HTTP_201_CREATED, {"Location": location_url}
+
+    # ------------------------------------------------------------------
+    # DELETE ALL ORDERS (for testing only)
+    # ------------------------------------------------------------------
+    @api.doc("delete_all_orders")
+    @api.response(204, "All Orders deleted")
+    def delete(self):
+        """
+        Delete all Orders
+
+        This endpoint will delete all Orders only if the system is under test
+        """
+        app.logger.info("Request to Delete all Orders...")
+        if "TESTING" in app.config and app.config["TESTING"]:
+            Order.remove_all()
+            app.logger.info("Removed all Orders from the database")
+        else:
+            app.logger.warning("Request to clear database while system not under test")
+
+        return "", status.HTTP_204_NO_CONTENT
+
+
+######################################################################
+#  PATH: /orders/<int:order_id>/cancel
+######################################################################
+@api.route("/orders/<int:order_id>/cancel")
+@api.param("order_id", "The order identifier")
+class CancelOrderResource(Resource):
+    """Cancel actions on a Order"""
+
+    @api.doc("cancel_order")
+    @api.response(404, "Order not found")
+    def put(self, order_id):
+        """Cancels an order"""
+        app.logger.info(f"Request to cancel order id:{order_id}")
+        # Check if order exists
+        order = Order.find(order_id)
+        if not order:
+            abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+
+        app.logger.info(f"Changing status of order with order id:{order_id} to CANCELLED")
+        order.status = OrderStatus.CANCELLED
+        order.update()
+        # Return the updated order
+        return order.serialize(), status.HTTP_200_OK
+
+
+######################################################################
+#  PATH: /orders/<int:order_id>/status
+######################################################################
+@api.route("/orders/<int:order_id>/status")
+@api.param("order_id", "The order identifier")
+class UpdateStatusResource(Resource):
+    """Update status actions on a Order"""
+
+    @api.doc("update_order_status")
+    @api.response(404, "Order not found")
+    @api.response(400, "The posted Order data was not valid")
+    @api.expect(order_model)
+    @api.marshal_with(order_model)
+    def put(self, order_id):
+        """Update the status of an Order"""
+        app.logger.info("Request to update order status for order with id: %s", order_id)
+
+        # Find the order by ID
+        order = Order.find(order_id)
+        if not order:
+            abort(
+                status.HTTP_404_NOT_FOUND,
+                f"Order with id '{order_id}' was not found.",
+            )
+
+        # Get the new status from request body
+        data = api.payload
+        if not data or "status" not in data:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "Required field 'status' missing from request body",
+            )
+
+        try:
+            new_status = OrderStatus(data["status"].upper())
+
+            # If current status is Cancelled, don't allow any changes
+            if order.status == OrderStatus.CANCELLED:
+                abort(
+                    status.HTTP_400_BAD_REQUEST,
+                    "Cannot update status of a cancelled order",
+                )
+
+            # If the status is not changing, return success (idempotent)
+            if order.status == new_status:
+                return order.serialize(), status.HTTP_200_OK
+
+            # Update the status
+            order.status = new_status
+            order.update()
+            return order.serialize(), status.HTTP_200_OK
+
+        except ValueError as error:
+            abort(status.HTTP_400_BAD_REQUEST, f"Invalid status value: {str(error)}")
+
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
 
-@app.route("/orders", methods=["POST"])
-def create_order():
-    """Create an Order"""
-    app.logger.info("Request to create an Order")
-    check_content_type("application/json")
+# @app.route("/orders", methods=["POST"])
+# def create_order():
+#     """Create an Order"""
+#     app.logger.info("Request to create an Order")
+#     check_content_type("application/json")
 
-    # Create the order
-    order = Order()
-    order.deserialize(request.get_json())
-    order.create()
+#     # Create the order
+#     order = Order()
+#     order.deserialize(request.get_json())
+#     order.create()
 
-    # Create a message to return
-    message = order.serialize()
-    location_url = url_for("read_order", order_id=order.id, _external=True)
+#     # Create a message to return
+#     message = order.serialize()
+#     location_url = url_for("read_order", order_id=order.id, _external=True)
 
-    return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+#     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
 
-@app.route("/orders/<int:order_id>", methods=["GET"])
-def read_order(order_id):
-    """Retrieve a single order"""
-    app.logger.info("Request for Order with id: %s", order_id)
+# @app.route("/orders/<int:order_id>", methods=["GET"])
+# def read_order(order_id):
+#     """Retrieve a single order"""
+#     app.logger.info("Request for Order with id: %s", order_id)
 
-    # See if the order exists and abort if it doesn't
-    order = Order.find(order_id)
-    if not order:
-        abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Order with id '{order_id}' could not be found.",
-        )
+#     # See if the order exists and abort if it doesn't
+#     order = Order.find(order_id)
+#     if not order:
+#         abort(
+#             status.HTTP_404_NOT_FOUND,
+#             f"Order with id '{order_id}' could not be found.",
+#         )
 
-    return jsonify(order.serialize()), status.HTTP_200_OK
+#     return jsonify(order.serialize()), status.HTTP_200_OK
 
 
 ######################################################################
 # LIST ALL ORDERS
 ######################################################################
-@app.route("/orders", methods=["GET"])
-def list_orders():
-    """Returns all of the Orders"""
-    app.logger.info("Request for Order list")
+# @app.route("/orders", methods=["GET"])
+# def list_orders():
+#     """Returns all of the Orders"""
+#     app.logger.info("Request for Order list")
 
-    # Process the query string if any
-    customer_name = request.args.get("name")
-    order_status = request.args.get("order_status")
-    product_name = request.args.get("product_name")
+#     # Process the query string if any
+#     customer_name = request.args.get("name")
+#     order_status = request.args.get("order_status")
+#     product_name = request.args.get("product_name")
 
-    orders = Order.find_by_filters(
-        customer_name=customer_name,
-        order_status=order_status,
-        product_name=product_name,
-    )
+#     orders = Order.find_by_filters(
+#         customer_name=customer_name,
+#         order_status=order_status,
+#         product_name=product_name,
+#     )
 
-    # Return as an array of dictionaries
-    results = [order.serialize() for order in orders]
+#     # Return as an array of dictionaries
+#     results = [order.serialize() for order in orders]
 
-    return jsonify(results), status.HTTP_200_OK
+#     return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################
@@ -134,40 +431,40 @@ def list_items_in_order(order_id):
 ######################################################################
 # UPDATE AN ORDER
 ######################################################################
-@app.route("/orders/<int:order_id>", methods=["PUT"])
-def update_order(order_id):
-    """Updates an order"""
-    app.logger.info(f"Request to update order id:{order_id}")
-    # Check if order exists
-    order = Order.find(order_id)
-    if not order:
-        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
-    # Update order with info in the json request
-    data = request.get_json()
-    app.logger.debug("Payload received for update: %s", data)
+# @app.route("/orders/<int:order_id>", methods=["PUT"])
+# def update_order(order_id):
+#     """Updates an order"""
+#     app.logger.info(f"Request to update order id:{order_id}")
+#     # Check if order exists
+#     order = Order.find(order_id)
+#     if not order:
+#         abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+#     # Update order with info in the json request
+#     data = request.get_json()
+#     app.logger.debug("Payload received for update: %s", data)
 
-    data = request.get_json()
-    order.deserialize(data)
-    order.id = order_id
-    order.update()
-    # Return the updated order
-    return jsonify(order.serialize()), status.HTTP_200_OK
+#     data = request.get_json()
+#     order.deserialize(data)
+#     order.id = order_id
+#     order.update()
+#     # Return the updated order
+#     return jsonify(order.serialize()), status.HTTP_200_OK
 
 
-@app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
-def cancel_order(order_id):
-    """Cancels an order"""
-    app.logger.info(f"Request to cancel order id:{order_id}")
-    # Check if order exists
-    order = Order.find(order_id)
-    if not order:
-        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+# @app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
+# def cancel_order(order_id):
+#     """Cancels an order"""
+#     app.logger.info(f"Request to cancel order id:{order_id}")
+#     # Check if order exists
+#     order = Order.find(order_id)
+#     if not order:
+#         abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
 
-    app.logger.info(f"Changing status of order with order id:{order_id} to CANCELLED")
-    order.status = OrderStatus.CANCELLED
-    order.update()
-    # Return the updated order
-    return jsonify(order.serialize()), status.HTTP_200_OK
+#     app.logger.info(f"Changing status of order with order id:{order_id} to CANCELLED")
+#     order.status = OrderStatus.CANCELLED
+#     order.update()
+#     # Return the updated order
+#     return jsonify(order.serialize()), status.HTTP_200_OK
 
 
 ######################################################################
@@ -289,22 +586,33 @@ def check_content_type(content_type):
     )
 
 
+def abort(error_code: int, message: str):
+    """Logs errors before aborting"""
+    app.logger.error(message)
+    api.abort(error_code, message)
+
+
+def data_reset():
+    """Removes all Orders from the database"""
+    Order.remove_all()
+
+
 ######################################################################
 # DELETE AN ORDER WITH ORDER ID
 ######################################################################
 
 
-@app.route("/orders/<int:order_id>", methods=["DELETE"])
-def delete_order(order_id):
-    """Delete an entire order"""
-    app.logger.info("Request to delete an entire order with order id: %s", order_id)
+# @app.route("/orders/<int:order_id>", methods=["DELETE"])
+# def delete_order(order_id):
+#     """Delete an entire order"""
+#     app.logger.info("Request to delete an entire order with order id: %s", order_id)
 
-    # See if the order first exists
-    order = Order.find(order_id)
-    if order:
-        order.delete()
+#     # See if the order first exists
+#     order = Order.find(order_id)
+#     if order:
+#         order.delete()
 
-    return "", status.HTTP_204_NO_CONTENT
+#     return "", status.HTTP_204_NO_CONTENT
 
 
 ######################################################################
