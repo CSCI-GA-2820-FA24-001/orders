@@ -23,10 +23,9 @@ and Delete Order
 
 from flask import request
 from flask import current_app as app  # Import Flask application
-from flask_restx import Resource, fields, reqparse
+from flask_restx import Resource, fields, reqparse, Api
 from service.models import Order, Item, OrderStatus
 from service.common import status  # HTTP Status Codes
-from flask_restx import Api
 
 ######################################################################
 # Configure Swagger before initializing it
@@ -380,6 +379,7 @@ class UpdateStatusResource(Resource):
 
         except ValueError as error:
             abort(status.HTTP_400_BAD_REQUEST, f"Invalid status value: {str(error)}")
+        return None, status.HTTP_400_BAD_REQUEST
 
 
 ######################################################################
