@@ -51,7 +51,7 @@ def create_app():
         title="Order Demo REST API Swagger Service",
         description="This is a Order server.",
         default="orders",
-        default_label="Pet shop operations",
+        default_label="Order service operations",
         doc="/apidocs",  # default also could use doc='/apidocs/'
         prefix="/api",
     )

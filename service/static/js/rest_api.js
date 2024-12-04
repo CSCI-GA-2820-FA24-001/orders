@@ -1,3 +1,4 @@
+const BASE_URL = "/api"
 $(function () {
     // ****************************************
     //  U T I L I T Y   F U N C T I O N S
@@ -58,7 +59,7 @@ $(function () {
         
         let ajax = $.ajax({
             type: "POST",
-            url: "/orders",
+            url: BASE_URL+"/orders",
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -99,7 +100,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "PUT",
-            url: `/orders/${order_id}`,
+            url: BASE_URL+`/orders/${order_id}`,
             contentType: "application/json",
             data: JSON.stringify(data)
         });
@@ -125,7 +126,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/orders/${order_id}`,
+            url: BASE_URL+`/orders/${order_id}`,
             contentType: "application/json",
             data: ''
         });
@@ -152,7 +153,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "DELETE",
-            url: `/orders/${order_id}`,
+            url: BASE_URL+`/orders/${order_id}`,
             contentType: "application/json",
             data: '',
         });
@@ -174,14 +175,29 @@ $(function () {
 
     $("#cancel-btn").click(function () {
         let order_id = $("#order_id").val();
+        let customer_name = $("#order_customer_name").val();
+        let status = $("#order_status").val();
+        let product_name = $("#order_product_name").val();
+        let quantity = $("#order_quantity").val();
+        let price = $("#order_price").val();
+
+        let data = {
+            "customer_name": customer_name,
+            "status": status,
+            "items": [{
+                "product_name": product_name,
+                "quantity": parseInt(quantity),
+                "price": parseFloat(price)
+            }]
+        };
 
         $("#flash_message").empty();
 
         let ajax = $.ajax({
             type: "PUT",
-            url: `/orders/${order_id}/cancel`,
+            url: BASE_URL+`/orders/${order_id}/cancel`,
             contentType: "application/json",
-            data: '',
+            data: JSON.stringify(data)
         });
 
         ajax.done(function(res){
@@ -231,10 +247,11 @@ $(function () {
         }
 
         $("#flash_message").empty();
-
+        flash_message("searching.. ")
+        
         let ajax = $.ajax({
             type: "GET",
-            url: `/orders${queryString ? '?' + queryString : ''}`,
+            url: BASE_URL+`/orders${queryString ? '?' + queryString : ''}`,
             contentType: "application/json",
             data: ''
         });
@@ -330,7 +347,7 @@ $(function () {
         
         let ajax = $.ajax({
             type: "POST",
-            url: `/orders/${order_id}/items`,
+            url: BASE_URL+`/orders/${order_id}/items`,
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -346,7 +363,7 @@ $(function () {
     });
 
     // ****************************************
-    // Update an Order
+    // Update an item in Order
     // ****************************************
 
     $("#update-item-btn").click(function () {
@@ -366,7 +383,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "PUT",
-            url: `/orders/${order_id}/items/${item_id}`,
+            url: BASE_URL+`/orders/${order_id}/items/${item_id}`,
             contentType: "application/json",
             data: JSON.stringify(data)
         });
@@ -393,7 +410,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/orders/${order_id}/items/${item_id}`,
+            url: BASE_URL+`/orders/${order_id}/items/${item_id}`,
             contentType: "application/json",
             data: ''
         });
@@ -421,7 +438,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "DELETE",
-            url: `/orders/${order_id}/items/${item_id}`,
+            url: BASE_URL+`/orders/${order_id}/items/${item_id}`,
             contentType: "application/json",
             data: '',
         });
@@ -462,7 +479,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/orders/${order_id}/items`,
+            url: BASE_URL+`/orders/${order_id}/items`,
             contentType: "application/json",
             data: ''
         });

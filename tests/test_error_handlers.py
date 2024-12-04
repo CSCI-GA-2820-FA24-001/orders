@@ -10,7 +10,7 @@ import logging
 from wsgi import app  # noqa: F401
 from service.common import status
 
-BASE_URL = "/orders"
+BASE_URL = "/api/orders"
 
 
 class TestErrorHandler(TestCase):
@@ -53,5 +53,5 @@ class TestErrorHandler(TestCase):
 
     def test_500_internal_server_error(self):
         """It should return a 500 internal_server_error error"""
-        resp = self.client.get("/trigger_500")
+        resp = self.client.get("/api/trigger_500")
         self.assertEqual(resp.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
