@@ -21,10 +21,9 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete Order
 """
 
-from functools import wraps
-from flask import request, jsonify
+from flask import request
 from flask import current_app as app  # Import Flask application
-from flask_restx import Resource, fields, reqparse, inputs
+from flask_restx import Resource, fields, reqparse
 from service.models import Order, Item, OrderStatus
 from service.common import status  # HTTP Status Codes
 from . import api
@@ -211,7 +210,7 @@ class OrderCollection(Resource):
         customer_name = args["name"]
         order_status = args["order_status"]
         product_name = args["product_name"]
-        
+
         orders = Order.find_by_filters(
             customer_name=customer_name,
             order_status=order_status,
@@ -221,7 +220,7 @@ class OrderCollection(Resource):
         # Return as an array of dictionaries
         results = [order.serialize() for order in orders]
         return results, status.HTTP_200_OK
-        
+
     # ------------------------------------------------------------------
     # ADD A NEW ORDER
     # ------------------------------------------------------------------

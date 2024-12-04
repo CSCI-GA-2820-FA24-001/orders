@@ -176,7 +176,7 @@ class TestOrderService(TestCase):
         self.assertEqual(data["quantity"], item.quantity)
         self.assertEqual(float(data["price"]), float(item.price))
         # No need to parse the datetime strings because it will not be returned by item_model in restx
-        
+
     def test_get_items_in_list(self):
         """It should Get a list of Items in an order with order_id"""
         # add two items to order
