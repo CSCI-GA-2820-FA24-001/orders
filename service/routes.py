@@ -26,7 +26,21 @@ from flask import current_app as app  # Import Flask application
 from flask_restx import Resource, fields, reqparse
 from service.models import Order, Item, OrderStatus
 from service.common import status  # HTTP Status Codes
-from . import api
+from flask_restx import Api
+
+######################################################################
+# Configure Swagger before initializing it
+######################################################################
+api = Api(
+    app,
+    version="1.0.0",
+    title="Order Demo REST API Swagger Service",
+    description="This is a Order server.",
+    default="orders",
+    default_label="Order service operations",
+    doc="/apidocs",  # default also could use doc='/apidocs/'
+    prefix="/api",
+)
 
 
 ############################################################
@@ -51,14 +65,12 @@ def index():
 base_item_model = api.model(
     "Item",
     {
-        "product_name": fields.String(required=True, description="The name of the product"),
-        "quantity": fields.Integer(
-            required=True, description="Quantity of item"
+        "product_name": fields.String(
+            required=True, description="The name of the product"
         ),
+        "quantity": fields.Integer(required=True, description="Quantity of item"),
         # pylint: disable=protected-access
-        "price": fields.Float(
-            required=True, description="Price of quantity of item"
-        ),
+        "price": fields.Float(required=True, description="Price of quantity of item"),
     },
 )
 
@@ -70,7 +82,8 @@ item_model = api.inherit(
             readOnly=True, description="The unique id assigned internally by service"
         ),
         "order_id": fields.Integer(
-            readOnly=True, description="The unique order id assigned internally by service"
+            readOnly=True,
+            description="The unique order id assigned internally by service",
         ),
     },
 )
@@ -79,7 +92,9 @@ item_model = api.inherit(
 base_order_model = api.model(
     "Order",
     {
-        "customer_name": fields.String(required=True, description="The name of the customer"),
+        "customer_name": fields.String(
+            required=True, description="The name of the customer"
+        ),
         "status": fields.String(
             enum=OrderStatus._member_names_, description="Status of the order"
         ),
@@ -103,13 +118,25 @@ order_model = api.inherit(
 # query string arguments: customer_name, order_status and product_name
 order_args = reqparse.RequestParser()
 order_args.add_argument(
-    "name", type=str, location="args", required=False, help="List orders by customer name"
+    "name",
+    type=str,
+    location="args",
+    required=False,
+    help="List orders by customer name",
 )
 order_args.add_argument(
-    "order_status", type=str, location="args", required=False, help="List orders by status"
+    "order_status",
+    type=str,
+    location="args",
+    required=False,
+    help="List orders by status",
 )
 order_args.add_argument(
-    "product_name", type=str, location="args", required=False, help="List orders by product_name in items"
+    "product_name",
+    type=str,
+    location="args",
+    required=False,
+    help="List orders by product_name in items",
 )
 
 
@@ -162,7 +189,9 @@ class OrderResource(Resource):
         # Check if order exists
         order = Order.find(order_id)
         if not order:
-            abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+            abort(
+                status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found."
+            )
         # Update order with info in the json request
         data = api.payload
         app.logger.debug("Payload received for update: %s", data)
@@ -281,9 +310,13 @@ class CancelOrderResource(Resource):
         # Check if order exists
         order = Order.find(order_id)
         if not order:
-            abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+            abort(
+                status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found."
+            )
 
-        app.logger.info(f"Changing status of order with order id:{order_id} to CANCELLED")
+        app.logger.info(
+            f"Changing status of order with order id:{order_id} to CANCELLED"
+        )
         order.status = OrderStatus.CANCELLED
         order.update()
         app.logger.info(f"{order}")
@@ -306,7 +339,9 @@ class UpdateStatusResource(Resource):
     @api.marshal_with(order_model)
     def put(self, order_id):
         """Update the status of an Order"""
-        app.logger.info("Request to update order status for order with id: %s", order_id)
+        app.logger.info(
+            "Request to update order status for order with id: %s", order_id
+        )
 
         # Find the order by ID
         order = Order.find(order_id)
@@ -454,7 +489,9 @@ class ItemResource(Resource):
 
         This endpoint returns just an item
         """
-        app.logger.info("Request to retrieve Item %s for Order id: %s", item_id, order_id)
+        app.logger.info(
+            "Request to retrieve Item %s for Order id: %s", item_id, order_id
+        )
 
         # See if the item exists and abort if it doesn't
         item = Item.find(item_id)
@@ -483,7 +520,9 @@ class ItemResource(Resource):
         # Check if order exists
         order = Order.find(order_id)
         if not order:
-            abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+            abort(
+                status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found."
+            )
 
         # Check if item exists
         item = Item.find(item_id)
@@ -515,7 +554,9 @@ class ItemResource(Resource):
         # Check if order exists
         order = Order.find(order_id)
         if not order:
-            abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+            abort(
+                status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found."
+            )
         item = Item.find(item_id)
         if item:
             item.delete()
