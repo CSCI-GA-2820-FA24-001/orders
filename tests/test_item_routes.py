@@ -32,7 +32,7 @@ DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
 
-BASE_URL = "/orders"
+BASE_URL = "/api/orders"
 
 
 ######################################################################
@@ -131,24 +131,7 @@ class TestOrderService(TestCase):
         self.assertEqual(data["quantity"], item.quantity)
         self.assertEqual(float(data["price"]), float(item.price))
 
-        # Parse the datetime strings
-        returned_created_at = datetime.strptime(
-            data["created_at"], "%Y-%m-%dT%H:%M:%S.%f"
-        )
-        returned_updated_at = datetime.strptime(
-            data["updated_at"], "%Y-%m-%dT%H:%M:%S.%f"
-        )
-
-        # Zero out microseconds
-        returned_created_at = returned_created_at.replace(microsecond=0)
-        returned_updated_at = returned_updated_at.replace(microsecond=0)
-        item_created_at = item.created_at.replace(microsecond=0)
-        item_updated_at = item.updated_at.replace(microsecond=0)
-
-        # Compare the timestamps
-        self.assertEqual(returned_created_at, item_created_at)
-        self.assertEqual(returned_updated_at, item_updated_at)
-
+        # No need to parse the datetime strings because it will not be returned by item_model in restx
         # Check that the location header was correct by getting it
         resp = self.client.get(location, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -157,18 +140,6 @@ class TestOrderService(TestCase):
         self.assertEqual(new_item["product_name"], item.product_name)
         self.assertEqual(new_item["quantity"], item.quantity)
         self.assertEqual(float(new_item["price"]), float(item.price))
-
-        # Parse and zero out microseconds
-        returned_created_at = datetime.strptime(
-            new_item["created_at"], "%Y-%m-%dT%H:%M:%S.%f"
-        ).replace(microsecond=0)
-        returned_updated_at = datetime.strptime(
-            new_item["updated_at"], "%Y-%m-%dT%H:%M:%S.%f"
-        ).replace(microsecond=0)
-
-        # Compare the timestamps
-        self.assertEqual(returned_created_at, item_created_at)
-        self.assertEqual(returned_updated_at, item_updated_at)
 
     def test_get_item(self):
         """It should Get an item from an order"""
@@ -204,24 +175,7 @@ class TestOrderService(TestCase):
         self.assertEqual(data["product_name"], item.product_name)
         self.assertEqual(data["quantity"], item.quantity)
         self.assertEqual(float(data["price"]), float(item.price))
-
-        # Parse the datetime strings
-        returned_created_at = datetime.strptime(
-            data["created_at"], "%Y-%m-%dT%H:%M:%S.%f"
-        )
-        returned_updated_at = datetime.strptime(
-            data["updated_at"], "%Y-%m-%dT%H:%M:%S.%f"
-        )
-
-        # Zero out microseconds
-        returned_created_at = returned_created_at.replace(microsecond=0)
-        returned_updated_at = returned_updated_at.replace(microsecond=0)
-        item_created_at = item.created_at.replace(microsecond=0)
-        item_updated_at = item.updated_at.replace(microsecond=0)
-
-        # Compare the timestamps
-        self.assertEqual(returned_created_at, item_created_at)
-        self.assertEqual(returned_updated_at, item_updated_at)
+        # No need to parse the datetime strings because it will not be returned by item_model in restx
 
     def test_get_items_in_list(self):
         """It should Get a list of Items in an order with order_id"""
