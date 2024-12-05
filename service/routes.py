@@ -271,26 +271,6 @@ class OrderCollection(Resource):
 
         return message, status.HTTP_201_CREATED, {"Location": location_url}
 
-    # ------------------------------------------------------------------
-    # DELETE ALL ORDERS (for testing only)
-    # ------------------------------------------------------------------
-    @api.doc("delete_all_orders")
-    @api.response(204, "All Orders deleted")
-    def delete(self):
-        """
-        Delete all Orders
-
-        This endpoint will delete all Orders only if the system is under test
-        """
-        app.logger.info("Request to Delete all Orders...")
-        if "TESTING" in app.config and app.config["TESTING"]:
-            Order.remove_all()
-            app.logger.info("Removed all Orders from the database")
-        else:
-            app.logger.warning("Request to clear database while system not under test")
-
-        return "", status.HTTP_204_NO_CONTENT
-
 
 ######################################################################
 #  PATH: /orders/<int:order_id>/cancel
