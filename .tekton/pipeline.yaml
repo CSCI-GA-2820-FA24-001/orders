@@ -1,142 +1,812 @@
 apiVersion: tekton.dev/v1
-kind: Pipeline
+kind: PipelineRun
 spec:
   params:
-    - default: 'https://github.com/CSCI-GA-2820-FA24-001/orders'
-      description: The URL to the git repo
-      name: GIT_REPO
-      type: string
-    - default: master
-      description: The reference (branch or ref)
-      name: GIT_REF
-      type: string
-    - default: orders
-      description: Name of the application
-      name: APP_NAME
-      type: string
-    - default: 'image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest'
-      description: The name of the image to build
-      name: IMAGE_NAME
-      type: string
-  tasks:
-    - name: git-clone
-      params:
-        - name: url
-          value: $(params.GIT_REPO)
-        - name: revision
-          value: $(params.GIT_REF)
-        - name: refspec
-          value: ''
-        - name: submodules
-          value: 'true'
-        - name: depth
-          value: '1'
-        - name: sslVerify
-          value: 'true'
-        - name: crtFileName
-          value: ca-bundle.crt
-        - name: subdirectory
-          value: ''
-        - name: sparseCheckoutDirectories
-          value: ''
-        - name: deleteExisting
-          value: 'true'
-        - name: httpProxy
-          value: ''
-        - name: httpsProxy
-          value: ''
-        - name: noProxy
-          value: ''
-        - name: verbose
-          value: 'true'
-        - name: gitInitImage
-          value: 'registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:dd5c8d08d52e304a542921634ebe6b5ff3d63c5f68f6d644e88417859b173ec8'
-        - name: userHome
-          value: /home/git
-      taskRef:
-        kind: ClusterTask
-        name: git-clone
-      workspaces:
-        - name: output
-          workspace: pipeline-workspace
-    - name: pylint
-      params:
-        - name: image
-          value: 'docker.io/python:3.11-slim'
-        - name: path
-          value: service
-        - name: args
-          value: []
-        - name: requirements_file
-          value: requirements.txt
-      runAfter:
-        - git-clone
-      taskRef:
-        kind: Task
-        name: pylint
-      workspaces:
-        - name: source
-          workspace: pipeline-workspace
-    - name: pytest-env
-      params:
-        - name: PYTEST_ARGS
-          value: []
-        - name: SECRET_NAME
-          value: postgres-creds
-        - name: SECRET_KEY
-          value: database_uri
-      runAfter:
-        - git-clone
-      taskRef:
-        kind: Task
-        name: pytest-env
-      workspaces:
-        - name: source
-          workspace: pipeline-workspace
-    - name: buildah
-      params:
-        - name: IMAGE
-          value: $(params.IMAGE_NAME)
-        - name: BUILDER_IMAGE
-          value: 'registry.redhat.io/rhel8/buildah@sha256:5c7cd7c9a3d49e8905fc98693f6da605aeafae36bde5622dc78e12f31db3cd59'
-        - name: STORAGE_DRIVER
-          value: vfs
-        - name: DOCKERFILE
-          value: ./Dockerfile
-        - name: CONTEXT
-          value: .
-        - name: TLSVERIFY
-          value: 'true'
-        - name: FORMAT
-          value: oci
-        - name: BUILD_EXTRA_ARGS
-          value: ''
-        - name: PUSH_EXTRA_ARGS
-          value: ''
-        - name: SKIP_PUSH
-          value: 'false'
-      runAfter:
-        - pylint
-        - pytest-env
-      taskRef:
-        kind: ClusterTask
-        name: buildah
-      workspaces:
-        - name: source
-          workspace: pipeline-workspace
-    - name: deploy-image
-      params:
-        - name: image_name
-          value: $(params.IMAGE_NAME)
-        - name: manifest_dir
-          value: k8s
-      runAfter:
-        - buildah
-      taskRef:
-        kind: Task
-        name: deploy-image
-      workspaces:
-        - name: source
-          workspace: pipeline-workspace
+    - name: GIT_REPO
+      value: 'https://github.com/CSCI-GA-2820-FA24-001/orders'
+    - name: GIT_REF
+      value: master
+    - name: APP_NAME
+      value: orders
+    - name: IMAGE_NAME
+      value: 'image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest'
+  pipelineRef:
+    name: cd-pipeline
+  taskRunTemplate:
+    serviceAccountName: pipeline
+  timeouts:
+    pipeline: 1h0m0s
   workspaces:
     - name: pipeline-workspace
+      persistentVolumeClaim:
+        claimName: pipeline-pvc
+status:
+  childReferences:
+    - apiVersion: tekton.dev/v1
+      kind: TaskRun
+      name: cd-pipeline-tw92lf-git-clone
+      pipelineTaskName: git-clone
+    - apiVersion: tekton.dev/v1
+      kind: TaskRun
+      name: cd-pipeline-tw92lf-pylint
+      pipelineTaskName: pylint
+    - apiVersion: tekton.dev/v1
+      kind: TaskRun
+      name: cd-pipeline-tw92lf-pytest-env
+      pipelineTaskName: pytest-env
+    - apiVersion: tekton.dev/v1
+      kind: TaskRun
+      name: cd-pipeline-tw92lf-buildah
+      pipelineTaskName: buildah
+    - apiVersion: tekton.dev/v1
+      kind: TaskRun
+      name: cd-pipeline-tw92lf-deploy-image
+      pipelineTaskName: deploy-image
+  completionTime: '2024-12-06T22:31:58Z'
+  conditions:
+    - lastTransitionTime: '2024-12-06T22:31:58Z'
+      message: 'Tasks Completed: 5 (Failed: 0, Cancelled 0), Skipped: 0'
+      reason: Succeeded
+      status: 'True'
+      type: Succeeded
+  pipelineSpec:
+    params:
+      - default: 'https://github.com/CSCI-GA-2820-FA24-001/orders'
+        description: The URL to the git repo
+        name: GIT_REPO
+        type: string
+      - default: master
+        description: The reference (branch or ref)
+        name: GIT_REF
+        type: string
+      - default: orders
+        description: Name of the application
+        name: APP_NAME
+        type: string
+      - default: 'image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest'
+        description: The name of the image to build
+        name: IMAGE_NAME
+        type: string
+    tasks:
+      - name: git-clone
+        params:
+          - name: url
+            value: 'https://github.com/CSCI-GA-2820-FA24-001/orders'
+          - name: revision
+            value: master
+          - name: refspec
+            value: ''
+          - name: submodules
+            value: 'true'
+          - name: depth
+            value: '1'
+          - name: sslVerify
+            value: 'true'
+          - name: crtFileName
+            value: ca-bundle.crt
+          - name: subdirectory
+            value: ''
+          - name: sparseCheckoutDirectories
+            value: ''
+          - name: deleteExisting
+            value: 'true'
+          - name: httpProxy
+            value: ''
+          - name: httpsProxy
+            value: ''
+          - name: noProxy
+            value: ''
+          - name: verbose
+            value: 'true'
+          - name: gitInitImage
+            value: 'registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:dd5c8d08d52e304a542921634ebe6b5ff3d63c5f68f6d644e88417859b173ec8'
+          - name: userHome
+            value: /home/git
+        taskRef:
+          kind: ClusterTask
+          name: git-clone
+        workspaces:
+          - name: output
+            workspace: pipeline-workspace
+        status:
+          artifacts: {}
+          completionTime: '2024-12-06T22:29:57Z'
+          conditions:
+            - lastTransitionTime: '2024-12-06T22:29:57Z'
+              message: All Steps have completed executing
+              reason: Succeeded
+              status: 'True'
+              type: Succeeded
+          podName: cd-pipeline-tw92lf-git-clone-pod
+          results:
+            - name: commit
+              type: string
+              value: a00fa830839156398cef000bfe6e51440a84aca2
+            - name: committer-date
+              type: string
+              value: '1733500511'
+            - name: url
+              type: string
+              value: 'https://github.com/CSCI-GA-2820-FA24-001/orders'
+          startTime: '2024-12-06T22:29:47Z'
+          steps:
+            - container: step-clone
+              imageID: 'registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:d8cea87b41090baacbb0f85ee2a777556c3b15210fa1ae51697e8dc4a29e7cae'
+              name: clone
+              terminated:
+                containerID: 'cri-o://88985e59b90baf7e74d0b7742871fcc11ffb7e81de15d553cbdffa1b0aacebe0'
+                exitCode: 0
+                finishedAt: '2024-12-06T22:29:56Z'
+                message: '[{"key":"commit","value":"a00fa830839156398cef000bfe6e51440a84aca2","type":1},{"key":"committer-date","value":"1733500511","type":1},{"key":"url","value":"https://github.com/CSCI-GA-2820-FA24-001/orders","type":1}]'
+                reason: Completed
+                startedAt: '2024-12-06T22:29:56Z'
+              terminationReason: Completed
+          taskSpec:
+            description: |-
+              These Tasks are Git tasks to work with repositories used by other tasks in your Pipeline.
+              The git-clone Task will clone a repo from the provided url into the output Workspace. By default the repo will be cloned into the root of your Workspace. You can clone into a subdirectory by setting this Task's subdirectory param. This Task also supports sparse checkouts. To perform a sparse checkout, pass a list of comma separated directory patterns to this Task's sparseCheckoutDirectories param.
+            params:
+              - description: Repository URL to clone from.
+                name: url
+                type: string
+              - default: ''
+                description: 'Revision to checkout. (branch, tag, sha, ref, etc...)'
+                name: revision
+                type: string
+              - default: ''
+                description: Refspec to fetch before checking out revision.
+                name: refspec
+                type: string
+              - default: 'true'
+                description: Initialize and fetch git submodules.
+                name: submodules
+                type: string
+              - default: '1'
+                description: 'Perform a shallow clone, fetching only the most recent N commits.'
+                name: depth
+                type: string
+              - default: 'true'
+                description: Set the `http.sslVerify` global git config. Setting this to `false` is not advised unless you are sure that you trust your git remote.
+                name: sslVerify
+                type: string
+              - default: ca-bundle.crt
+                description: file name of mounted crt using ssl-ca-directory workspace. default value is ca-bundle.crt.
+                name: crtFileName
+                type: string
+              - default: ''
+                description: Subdirectory inside the `output` Workspace to clone the repo into.
+                name: subdirectory
+                type: string
+              - default: ''
+                description: Define the directory patterns to match or exclude when performing a sparse checkout.
+                name: sparseCheckoutDirectories
+                type: string
+              - default: 'true'
+                description: Clean out the contents of the destination directory if it already exists before cloning.
+                name: deleteExisting
+                type: string
+              - default: ''
+                description: HTTP proxy server for non-SSL requests.
+                name: httpProxy
+                type: string
+              - default: ''
+                description: HTTPS proxy server for SSL requests.
+                name: httpsProxy
+                type: string
+              - default: ''
+                description: Opt out of proxying HTTP/HTTPS requests.
+                name: noProxy
+                type: string
+              - default: 'true'
+                description: Log the commands that are executed during `git-clone`'s operation.
+                name: verbose
+                type: string
+              - default: 'registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:dd5c8d08d52e304a542921634ebe6b5ff3d63c5f68f6d644e88417859b173ec8'
+                description: The image providing the git-init binary that this Task runs.
+                name: gitInitImage
+                type: string
+              - default: /home/git
+                description: |
+                  Absolute path to the user's home directory.
+                name: userHome
+                type: string
+            results:
+              - description: The precise commit SHA that was fetched by this Task.
+                name: commit
+                type: string
+              - description: The precise URL that was fetched by this Task.
+                name: url
+                type: string
+              - description: The epoch timestamp of the commit that was fetched by this Task.
+                name: committer-date
+                type: string
+            steps:
+              - computeResources: {}
+                env:
+                  - name: HOME
+                    value: /home/git
+                  - name: PARAM_URL
+                    value: 'https://github.com/CSCI-GA-2820-FA24-001/orders'
+                  - name: PARAM_REVISION
+                    value: master
+                  - name: PARAM_REFSPEC
+                  - name: PARAM_SUBMODULES
+                    value: 'true'
+                  - name: PARAM_DEPTH
+                    value: '1'
+                  - name: PARAM_SSL_VERIFY
+                    value: 'true'
+                  - name: PARAM_CRT_FILENAME
+                    value: ca-bundle.crt
+                  - name: PARAM_SUBDIRECTORY
+                  - name: PARAM_DELETE_EXISTING
+                    value: 'true'
+                  - name: PARAM_HTTP_PROXY
+                  - name: PARAM_HTTPS_PROXY
+                  - name: PARAM_NO_PROXY
+                  - name: PARAM_VERBOSE
+                    value: 'true'
+                  - name: PARAM_SPARSE_CHECKOUT_DIRECTORIES
+                  - name: PARAM_USER_HOME
+                    value: /home/git
+                  - name: WORKSPACE_OUTPUT_PATH
+                    value: /workspace/output
+                  - name: WORKSPACE_SSH_DIRECTORY_BOUND
+                    value: 'false'
+                  - name: WORKSPACE_SSH_DIRECTORY_PATH
+                  - name: WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND
+                    value: 'false'
+                  - name: WORKSPACE_BASIC_AUTH_DIRECTORY_PATH
+                  - name: WORKSPACE_SSL_CA_DIRECTORY_BOUND
+                    value: 'false'
+                  - name: WORKSPACE_SSL_CA_DIRECTORY_PATH
+                image: 'registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:dd5c8d08d52e304a542921634ebe6b5ff3d63c5f68f6d644e88417859b173ec8'
+                name: clone
+                script: |
+                  #!/usr/bin/env sh
+                  set -eu
+
+                  if [ "${PARAM_VERBOSE}" = "true" ] ; then
+                    set -x
+                  fi
+
+                  if [ "${WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND}" = "true" ] ; then
+                    cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.git-credentials" "${PARAM_USER_HOME}/.git-credentials"
+                    cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.gitconfig" "${PARAM_USER_HOME}/.gitconfig"
+                    chmod 400 "${PARAM_USER_HOME}/.git-credentials"
+                    chmod 400 "${PARAM_USER_HOME}/.gitconfig"
+                  fi
+
+                  if [ "${WORKSPACE_SSH_DIRECTORY_BOUND}" = "true" ] ; then
+                    cp -R "${WORKSPACE_SSH_DIRECTORY_PATH}" "${PARAM_USER_HOME}"/.ssh
+                    chmod 700 "${PARAM_USER_HOME}"/.ssh
+                    chmod -R 400 "${PARAM_USER_HOME}"/.ssh/*
+                  fi
+
+                  if [ "${WORKSPACE_SSL_CA_DIRECTORY_BOUND}" = "true" ] ; then
+                     export GIT_SSL_CAPATH="${WORKSPACE_SSL_CA_DIRECTORY_PATH}"
+                     if [ "${PARAM_CRT_FILENAME}" != "" ] ; then
+                        export GIT_SSL_CAINFO="${WORKSPACE_SSL_CA_DIRECTORY_PATH}/${PARAM_CRT_FILENAME}"
+                     fi
+                  fi
+                  CHECKOUT_DIR="${WORKSPACE_OUTPUT_PATH}/${PARAM_SUBDIRECTORY}"
+
+                  cleandir() {
+                    # Delete any existing contents of the repo directory if it exists.
+                    #
+                    # We don't just "rm -rf ${CHECKOUT_DIR}" because ${CHECKOUT_DIR} might be "/"
+                    # or the root of a mounted volume.
+                    if [ -d "${CHECKOUT_DIR}" ] ; then
+                      # Delete non-hidden files and directories
+                      rm -rf "${CHECKOUT_DIR:?}"/*
+                      # Delete files and directories starting with . but excluding ..
+                      rm -rf "${CHECKOUT_DIR}"/.[!.]*
+                      # Delete files and directories starting with .. plus any other character
+                      rm -rf "${CHECKOUT_DIR}"/..?*
+                    fi
+                  }
+
+                  if [ "${PARAM_DELETE_EXISTING}" = "true" ] ; then
+                    cleandir || true
+                  fi
+
+                  test -z "${PARAM_HTTP_PROXY}" || export HTTP_PROXY="${PARAM_HTTP_PROXY}"
+                  test -z "${PARAM_HTTPS_PROXY}" || export HTTPS_PROXY="${PARAM_HTTPS_PROXY}"
+                  test -z "${PARAM_NO_PROXY}" || export NO_PROXY="${PARAM_NO_PROXY}"
+
+                  git config --global --add safe.directory "${WORKSPACE_OUTPUT_PATH}"
+                  /ko-app/git-init \
+                    -url="${PARAM_URL}" \
+                    -revision="${PARAM_REVISION}" \
+                    -refspec="${PARAM_REFSPEC}" \
+                    -path="${CHECKOUT_DIR}" \
+                    -sslVerify="${PARAM_SSL_VERIFY}" \
+                    -submodules="${PARAM_SUBMODULES}" \
+                    -depth="${PARAM_DEPTH}" \
+                    -sparseCheckoutDirectories="${PARAM_SPARSE_CHECKOUT_DIRECTORIES}"
+                  cd "${CHECKOUT_DIR}"
+                  RESULT_SHA="$(git rev-parse HEAD)"
+                  EXIT_CODE="$?"
+                  if [ "${EXIT_CODE}" != 0 ] ; then
+                    exit "${EXIT_CODE}"
+                  fi
+                  RESULT_COMMITTER_DATE="$(git log -1 --pretty=%ct)"
+                  printf "%s" "${RESULT_COMMITTER_DATE}" > "/tekton/results/committer-date"
+                  printf "%s" "${RESULT_SHA}" > "/tekton/results/commit"
+                  printf "%s" "${PARAM_URL}" > "/tekton/results/url"
+                securityContext:
+                  runAsNonRoot: true
+                  runAsUser: 65532
+            workspaces:
+              - description: The git repo will be cloned onto the volume backing this Workspace.
+                name: output
+              - description: |
+                  A .ssh directory with private key, known_hosts, config, etc. Copied to
+                  the user's home before git commands are executed. Used to authenticate
+                  with the git remote when performing the clone. Binding a Secret to this
+                  Workspace is strongly recommended over other volume types.
+                name: ssh-directory
+                optional: true
+              - description: |
+                  A Workspace containing a .gitconfig and .git-credentials file. These
+                  will be copied to the user's home before any git commands are run. Any
+                  other files in this Workspace are ignored. It is strongly recommended
+                  to use ssh-directory over basic-auth whenever possible and to bind a
+                  Secret to this Workspace over other volume types.
+                name: basic-auth
+                optional: true
+              - description: |
+                  A workspace containing CA certificates, this will be used by Git to
+                  verify the peer with when fetching or pushing over HTTPS.
+                name: ssl-ca-directory
+                optional: true
+          duration: 10s
+          reason: Succeeded
+      - name: pylint
+        params:
+          - name: image
+            value: 'docker.io/python:3.11-slim'
+          - name: path
+            value: service
+          - name: args
+            value: []
+          - name: requirements-file
+            value: requirements.txt
+        runAfter:
+          - git-clone
+        taskRef:
+          kind: Task
+          name: pylint
+        workspaces:
+          - name: source
+            workspace: pipeline-workspace
+        status:
+          artifacts: {}
+          completionTime: '2024-12-06T22:30:40Z'
+          conditions:
+            - lastTransitionTime: '2024-12-06T22:30:40Z'
+              message: All Steps have completed executing
+              reason: Succeeded
+              status: 'True'
+              type: Succeeded
+          podName: cd-pipeline-tw92lf-pylint-pod
+          startTime: '2024-12-06T22:29:57Z'
+          steps:
+            - container: step-pylint
+              imageID: 'docker.io/library/python@sha256:84197f777db48a6d6eb5354a638a1cbdb77e2f03f6b85da7695a5e128d224cd7'
+              name: pylint
+              terminated:
+                containerID: 'cri-o://acd413896f1ef86d053f5ca1ae314d0df9e1f07794087a0d9c11862b4ccc8e2d'
+                exitCode: 0
+                finishedAt: '2024-12-06T22:30:40Z'
+                reason: Completed
+                startedAt: '2024-12-06T22:30:03Z'
+              terminationReason: Completed
+          taskSpec:
+            description: Use to run pylint on the provided input source. If Poetry is being used it will detect the poetry.lock file and install via requirements export.
+            params:
+              - default: 'docker.io/python:3.11-slim'
+                description: The container image with pylint
+                name: image
+                type: string
+              - default: .
+                description: The path to the module which should be analyzed by pylint
+                name: path
+                type: string
+              - default: []
+                description: The arguments to pass to the pylint CLI.
+                name: args
+                type: array
+              - default: requirements.txt
+                description: The name of the requirements file inside the source location
+                name: requirements-file
+                type: string
+            steps:
+              - computeResources: {}
+                image: 'docker.io/python:3.11-slim'
+                name: pylint
+                script: |
+                  #!/bin/bash
+                  set -e
+                  export PATH=$PATH:$HOME/.local/bin:
+
+                  echo "***** Installing dependencies *****"
+                  if [ -e "poetry.lock" ]; then
+                    echo "Found poetry.lock file: using poetry ..."
+                    python -m pip install --upgrade pip poetry
+                    poetry config virtualenvs.create false
+                    poetry install
+                  elif [ -n "requirements.txt" ] && [ -e "requirements.txt" ]; then
+                    python -m pip install --user -r "requirements.txt"
+                  fi
+
+                  # Make sure pylint is installed
+                  python -m pip install pylint
+
+                  echo "***** Running Linting *****"
+                  pylint $@ "service"
+                workingDir: /workspace/source
+            workspaces:
+              - description: The workspace with the source code.
+                name: source
+          duration: 43s
+          reason: Succeeded
+      - name: pytest-env
+        params:
+          - name: pytest-args
+            value: []
+          - name: secret-name
+            value: postgres-creds
+          - name: secret-key
+            value: database_uri
+        runAfter:
+          - git-clone
+        taskRef:
+          kind: Task
+          name: pytest-env
+        workspaces:
+          - name: source
+            workspace: pipeline-workspace
+        status:
+          artifacts: {}
+          completionTime: '2024-12-06T22:30:34Z'
+          conditions:
+            - lastTransitionTime: '2024-12-06T22:30:34Z'
+              message: All Steps have completed executing
+              reason: Succeeded
+              status: 'True'
+              type: Succeeded
+          podName: cd-pipeline-tw92lf-pytest-env-pod
+          startTime: '2024-12-06T22:29:57Z'
+          steps:
+            - container: step-pytest
+              imageID: 'docker.io/library/python@sha256:84197f777db48a6d6eb5354a638a1cbdb77e2f03f6b85da7695a5e128d224cd7'
+              name: pytest
+              terminated:
+                containerID: 'cri-o://fafbb0177f0b2af4ccd3a55672c3746959fba2a7ae89d36484f56cffcb201d2a'
+                exitCode: 0
+                finishedAt: '2024-12-06T22:30:33Z'
+                reason: Completed
+                startedAt: '2024-12-06T22:30:04Z'
+              terminationReason: Completed
+          taskSpec:
+            description: |-
+              This task can be used to perform unit tests with pytest. It supports both requirements.txt and poetry.lock files.
+              It also has the ability to create an environment variable that is sourced from a Secret. This allows you to define credentials that can be used to connect to a test database.
+            params:
+              - default: []
+                description: The arguments to pass to the pytest CLI.
+                name: pytest-args
+                type: array
+              - default: postgres-creds
+                description: The name of the secret containing a database-uri key
+                name: secret-name
+                type: string
+              - default: database-uri
+                description: The name of the key that contains the database uri
+                name: secret-key
+                type: string
+            steps:
+              - computeResources: {}
+                env:
+                  - name: DATABASE_URI
+                    valueFrom:
+                      secretKeyRef:
+                        key: database_uri
+                        name: postgres-creds
+                image: 'docker.io/python:3.11-slim'
+                name: pytest
+                script: |
+                  #!/bin/bash
+                  set -e
+                  export PATH=$PATH:$HOME/.local/bin:
+
+                  echo "***** Installing dependencies *****"
+                  if [ -e "poetry.lock" ]; then
+                    echo "Found poetry.lock file: using poetry ..."
+                    python -m pip install --upgrade pip poetry
+                    poetry config virtualenvs.create false
+                    poetry install
+                  elif -e "requirements.txt" ]; then
+                    python -m pip install --user -r requirements.txt
+                  fi
+
+                  # Make sure pylint is installed
+                  python -m pip install pytest
+
+                  echo "***** Running Tests *****"
+                  pytest --version
+                  pytest
+                workingDir: /workspace/source
+            workspaces:
+              - name: source
+          duration: 37s
+          reason: Succeeded
+      - name: buildah
+        params:
+          - name: IMAGE
+            value: 'image-registry.openshift-image-registry.svc:5000/rhea12-dev/orders:latest'
+          - name: BUILDER_IMAGE
+            value: 'registry.redhat.io/rhel8/buildah@sha256:5c7cd7c9a3d49e8905fc98693f6da605aeafae36bde5622dc78e12f31db3cd59'
+          - name: STORAGE_DRIVER
+            value: vfs
+          - name: DOCKERFILE
+            value: ./Dockerfile
+          - name: CONTEXT
+            value: .
+          - name: TLSVERIFY
+            value: 'true'
+          - name: FORMAT
+            value: oci
+          - name: BUILD_EXTRA_ARGS
+            value: ''
+          - name: PUSH_EXTRA_ARGS
+            value: ''
+          - name: SKIP_PUSH
+            value: 'false'
+        runAfter:
+          - pylint
+          - pytest-env
+        taskRef:
+          kind: ClusterTask
+          name: buildah
+        workspaces:
+          - name: source
+            workspace: pipeline-workspace
+        status:
+          artifacts: {}
+          completionTime: '2024-12-06T22:31:45Z'
+          conditions:
+            - lastTransitionTime: '2024-12-06T22:31:45Z'
+              message: All Steps have completed executing
+              reason: Succeeded
+              status: 'True'
+              type: Succeeded
+          podName: cd-pipeline-tw92lf-buildah-pod
+          results:
+            - name: IMAGE_DIGEST
+              type: string
+              value: 'sha256:f2cce167964f1d8b0cf6835f69ec1443db02656a0cee8830b5a7c3f996a06a3a'
+            - name: IMAGE_URL
+              type: string
+              value: 'image-registry.openshift-image-registry.svc:5000/rhea12-dev/orders:latest'
+          startTime: '2024-12-06T22:30:40Z'
+          steps:
+            - container: step-build-and-push
+              imageID: 'registry.redhat.io/rhel8/buildah@sha256:560a6eae768b74f073efc5fb1486f646289852a2840b96350708c46f9fc79393'
+              name: build-and-push
+              terminated:
+                containerID: 'cri-o://2cadfde80fc068612c9a741d63db2d5457964e270e079b48d4f31a865c020481'
+                exitCode: 0
+                finishedAt: '2024-12-06T22:31:44Z'
+                message: '[{"key":"IMAGE_DIGEST","value":"sha256:f2cce167964f1d8b0cf6835f69ec1443db02656a0cee8830b5a7c3f996a06a3a","type":1},{"key":"IMAGE_URL","value":"image-registry.openshift-image-registry.svc:5000/rhea12-dev/orders:latest","type":1}]'
+                reason: Completed
+                startedAt: '2024-12-06T22:30:45Z'
+              terminationReason: Completed
+          taskSpec:
+            description: |-
+              Buildah task builds source into a container image and then pushes it to a container registry.
+              Buildah Task builds source into a container image using Project Atomic's Buildah build tool.It uses Buildah's support for building from Dockerfiles, using its buildah bud command.This command executes the directives in the Dockerfile to assemble a container image, then pushes that image to a container registry.
+            params:
+              - description: Reference of the image buildah will produce.
+                name: IMAGE
+                type: string
+              - default: 'registry.redhat.io/rhel8/buildah@sha256:5c7cd7c9a3d49e8905fc98693f6da605aeafae36bde5622dc78e12f31db3cd59'
+                description: The location of the buildah builder image.
+                name: BUILDER_IMAGE
+                type: string
+              - default: vfs
+                description: Set buildah storage driver
+                name: STORAGE_DRIVER
+                type: string
+              - default: ./Dockerfile
+                description: Path to the Dockerfile to build.
+                name: DOCKERFILE
+                type: string
+              - default: .
+                description: Path to the directory to use as context.
+                name: CONTEXT
+                type: string
+              - default: 'true'
+                description: Verify the TLS on the registry endpoint (for push/pull to a non-TLS registry)
+                name: TLSVERIFY
+                type: string
+              - default: oci
+                description: 'The format of the built container, oci or docker'
+                name: FORMAT
+                type: string
+              - default: ''
+                description: Extra parameters passed for the build command when building images.
+                name: BUILD_EXTRA_ARGS
+                type: string
+              - default: ''
+                description: Extra parameters passed for the push command when pushing images.
+                name: PUSH_EXTRA_ARGS
+                type: string
+              - default: 'false'
+                description: Skip pushing the built image
+                name: SKIP_PUSH
+                type: string
+            results:
+              - description: Digest of the image just built.
+                name: IMAGE_DIGEST
+                type: string
+              - description: Image repository where the built image would be pushed to
+                name: IMAGE_URL
+                type: string
+            steps:
+              - computeResources: {}
+                image: 'registry.redhat.io/rhel8/buildah@sha256:5c7cd7c9a3d49e8905fc98693f6da605aeafae36bde5622dc78e12f31db3cd59'
+                name: build-and-push
+                script: |
+                  ENTITLEMENT_VOLUME=""
+
+                  if [[ "false" == "true" ]]; then
+                    ENTITLEMENT_VOLUME="--volume /tmp/entitlement:/etc/pki/entitlement"
+                  fi
+
+                  buildah bud --storage-driver=vfs \
+                    $ENTITLEMENT_VOLUME  \
+                    --format=oci --tls-verify=true \
+                    -f ./Dockerfile -t image-registry.openshift-image-registry.svc:5000/rhea12-dev/orders:latest .
+
+                  [[ "false" == "true" ]] && echo "Push skipped" && exit 0
+
+                  if [[ "false" == "true" ]]; then
+
+                    # if config.json exists at workspace root, we use that
+                    if test -f "/config.json"; then
+                      export DOCKER_CONFIG=""
+
+                    # else we look for .dockerconfigjson at the root
+                    elif test -f "/.dockerconfigjson"; then
+                      cp "/.dockerconfigjson" "$HOME/.docker/config.json"
+                      export DOCKER_CONFIG="$HOME/.docker"
+
+                    # need to error out if neither files are present
+                    else
+                      echo "neither 'config.json' nor '.dockerconfigjson' found at workspace root"
+                      exit 1
+                    fi
+                  fi
+
+                  buildah --storage-driver=vfs push \
+                     --tls-verify=true \
+                    --digestfile /tmp/image-digest image-registry.openshift-image-registry.svc:5000/rhea12-dev/orders:latest \
+                    docker://image-registry.openshift-image-registry.svc:5000/rhea12-dev/orders:latest
+                  cat /tmp/image-digest | tee /tekton/results/IMAGE_DIGEST
+                  echo -n "image-registry.openshift-image-registry.svc:5000/rhea12-dev/orders:latest" | tee /tekton/results/IMAGE_URL
+                securityContext:
+                  capabilities:
+                    add:
+                      - SETFCAP
+                volumeMounts:
+                  - mountPath: /var/lib/containers
+                    name: varlibcontainers
+                workingDir: /workspace/source
+            volumes:
+              - emptyDir: {}
+                name: varlibcontainers
+            workspaces:
+              - name: source
+              - description: An optional workspace that allows providing a .docker/config.json file for Buildah to access the container registry. The file should be placed at the root of the Workspace with name config.json or .dockerconfigjson.
+                name: dockerconfig
+                optional: true
+              - description: An optional workspace that allows providing the entitlement keys for Buildah to access subscription. The mounted workspace contains entitlement.pem and entitlement-key.pem.
+                mountPath: /tmp/entitlement
+                name: rhel-entitlement
+                optional: true
+          duration: 1m 5s
+          reason: Succeeded
+      - name: deploy-image
+        params:
+          - name: image-name
+            value: 'image-registry.openshift-image-registry.svc:5000/rhea12-dev/orders:latest'
+          - name: manifest-dir
+            value: k8s
+        runAfter:
+          - buildah
+        taskRef:
+          kind: Task
+          name: deploy-image
+        workspaces:
+          - name: source
+            workspace: pipeline-workspace
+        status:
+          conditions:
+            - lastTransitionTime: '2024-12-06T22:31:58Z'
+              message: All Steps have completed executing
+              reason: Succeeded
+              status: 'True'
+              type: Succeeded
+          podName: cd-pipeline-tw92lf-deploy-image-pod
+          startTime: '2024-12-06T22:31:45Z'
+          steps:
+            - container: step-deploy
+              imageID: 'quay.io/openshift/origin-cli@sha256:237c7b164535f8567b887d2dd4022cb86055dff2ca800e7f8b16a0337b938173'
+              name: deploy
+              running:
+                startedAt: '2024-12-06T22:31:50Z'
+              terminated:
+                containerID: 'cri-o://f73db3c33fbe701d2f56accde30c02289de1b4627a6005a845c0ae608f73cce8'
+                exitCode: 0
+                finishedAt: '2024-12-06T22:31:57Z'
+                reason: Completed
+                startedAt: '2024-12-06T22:31:53Z'
+              terminationReason: Completed
+          taskSpec:
+            description: This task will update the deployment.yaml with the latest image name and then apply that yaml file and it's service file.
+            params:
+              - description: The fully qualified name of the new image to deploy
+                name: image-name
+                type: string
+              - default: k8s
+                description: The directory in source that contains yaml manifests
+                name: manifest-dir
+                type: string
+            steps:
+              - args:
+                  - |-
+                    #!/bin/bash
+                    set -e
+
+                    echo Applying manifests in k8s directory
+
+                    echo "**********************************************************************"
+                    echo "Installing YQ..."
+                    echo "**********************************************************************"
+                    wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+                    chmod a+x /usr/bin/yq
+
+                    echo "*********************  DEPLOYMENT  ***********************"
+                    echo "Deploying image-registry.openshift-image-registry.svc:5000/rhea12-dev/orders:latest ..."
+
+                    yq -e -i '.spec.template.spec.containers[0].image="image-registry.openshift-image-registry.svc:5000/rhea12-dev/orders:latest"' k8s/deployment.yaml
+                    cat k8s/deployment.yaml
+
+                    echo "************************************************************"
+                    echo "OC APPLY..."
+                    oc apply -f k8s/deployment.yaml
+                    oc apply -f k8s/service.yaml
+
+                    echo "************************************************************"
+                    sleep 3
+                    echo "Pods:"
+                    oc get pods
+                    echo ""
+                command:
+                  - /bin/bash
+                  - '-c'
+                computeResources: {}
+                image: 'quay.io/openshift/origin-cli:latest'
+                name: deploy
+                workingDir: /workspace/source
+            workspaces:
+              - name: source
+          reason: Succeeded
+          artifacts: {}
+          completionTime: '2024-12-06T22:31:58Z'
+          duration: 13s
+    workspaces:
+      - name: pipeline-workspace
+  startTime: '2024-12-06T22:29:47Z'
