@@ -341,25 +341,24 @@ class UpdateStatusResource(Resource):
         try:
             new_status = OrderStatus(data["status"].upper())
 
-            # If current status is Cancelled, don't allow any changes
-            if order.status == OrderStatus.CANCELLED:
-                abort(
-                    status.HTTP_400_BAD_REQUEST,
-                    "Cannot update status of a cancelled order",
-                )
-
-            # If the status is not changing, return success (idempotent)
-            if order.status == new_status:
-                return order.serialize(), status.HTTP_200_OK
-
-            # Update the status
-            order.status = new_status
-            order.update()
-            return order.serialize(), status.HTTP_200_OK
-
         except ValueError as error:
             abort(status.HTTP_400_BAD_REQUEST, f"Invalid status value: {str(error)}")
-        return None, status.HTTP_400_BAD_REQUEST
+
+        # If current status is Cancelled, don't allow any changes
+        if order.status == OrderStatus.CANCELLED:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "Cannot update status of a cancelled order",
+            )
+
+        # If the status is not changing, return success (idempotent)
+        if order.status == new_status:
+            return order.serialize(), status.HTTP_200_OK
+
+        # Update the status
+        order.status = new_status
+        order.update()
+        return order.serialize(), status.HTTP_200_OK
 
 
 ######################################################################
