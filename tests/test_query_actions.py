@@ -124,7 +124,12 @@ class TestOrderService(TestCase):
 
     def test_update_order_idempotent(self):
         """It should be idempotent when updating to same status"""
-        order = self._create_orders(1)[0]
+        order = None
+        while True:
+            order = self._create_orders(1)[0]  # Create or fetch an order
+            if order.status != OrderStatus.CANCELLED:
+                break  # Exit the loop if the status is NOT CANCELLED
+
         curr_status = order.status
 
         # Try to update with the same status

@@ -359,7 +359,6 @@ class UpdateStatusResource(Resource):
 
         except ValueError as error:
             abort(status.HTTP_400_BAD_REQUEST, f"Invalid status value: {str(error)}")
-        return None, status.HTTP_400_BAD_REQUEST
 
 
 ######################################################################
