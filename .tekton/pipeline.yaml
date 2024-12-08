@@ -1,6 +1,5 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
-metadata:
 spec:
   params:
     - default: 'https://github.com/CSCI-GA-2820-FA24-001/orders'
@@ -136,6 +135,22 @@ spec:
       taskRef:
         kind: Task
         name: deploy-image
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+    - name: behave
+      params:
+        - name: base-url
+          value: 'https://orders-rhea12-dev.apps.sandbox-m2.ll9k.p1.openshiftapps.com'
+        - name: wait-seconds
+          value: '60'
+        - name: driver
+          value: chrome
+      runAfter:
+        - deploy-image
+      taskRef:
+        kind: Task
+        name: behave
       workspaces:
         - name: source
           workspace: pipeline-workspace
