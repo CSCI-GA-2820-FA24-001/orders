@@ -1,5 +1,7 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
+metadata:
+  name: cd-pipeline
 spec:
   params:
     - default: 'https://github.com/CSCI-GA-2820-FA24-001/orders'
@@ -17,6 +19,9 @@ spec:
     - default: 'image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest'
       description: The name of the image to build
       name: IMAGE_NAME
+      type: string
+    - default: 'https://orders-rhea12-dev.apps.sandbox-m2.ll9k.p1.openshiftapps.com'
+      name: BASE_URL
       type: string
   tasks:
     - name: git-clone
@@ -141,7 +146,7 @@ spec:
     - name: behave
       params:
         - name: base-url
-          value: 'https://orders-rhea12-dev.apps.sandbox-m2.ll9k.p1.openshiftapps.com'
+          value: $(params.BASE_URL)
         - name: wait-seconds
           value: '60'
         - name: driver
