@@ -51,6 +51,21 @@ def step_impl(context, text_string):
     assert text_string not in element.text
 
 
+@when('I set the "{element_name}" to "{text_string}"')
+def step_impl(context, element_name, text_string):
+    element_id = element_name.lower().replace(" ", "_")
+    element = context.driver.find_element(By.ID, element_id)
+    element.clear()
+    element.send_keys(text_string)
+
+
+@when('I select "{text}" in the "{element_name}" dropdown')
+def step_impl(context, text, element_name):
+    element_id = element_name.lower().replace(" ", "_")
+    element = Select(context.driver.find_element(By.ID, element_id))
+    element.select_by_visible_text(text)
+
+
 @then('I should see "{text}" in the "{element_name}" dropdown')
 def step_impl(context, text, element_name):
     element_id = element_name.lower().replace(" ", "_")
@@ -65,23 +80,36 @@ def step_impl(context, element_name):
     assert element.get_attribute("value") == ""
 
 
-position_mapping = {
-    "First": 0,
-    "Second": 1,
-    "Third": 2,
-    "Fourth": 3,
-}
-
-
-@then('I should see "{order_count}" orders')
-def step_impl(context, order_count):
-    container = context.driver.find_element(By.ID, "ordersContainer")
-    orders = container.find_elements(By.XPATH, "./div")
-
-    assert len(orders) == int(order_count), (
-        f"Expected to see {order_count} orders, " f"but found {len(orders)}."
+##################################################################
+# These two function simulate copy and paste
+##################################################################
+@when('I copy the "{element_name}" field')
+def step_impl(context, element_name):
+    element_id = element_name.lower().replace(" ", "_")
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
     )
-    print(f"Success: Found {order_count} orders as expected.")
+    context.clipboard = element.get_attribute("value")
+    logging.info("Clipboard contains: %s", context.clipboard)
+
+
+@when('I paste the "{element_name}" field')
+def step_impl(context, element_name):
+    element_id = element_name.lower().replace(" ", "_")
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
+    element.clear()
+    element.send_keys(context.clipboard)
+
+
+##################################################################
+# This code works because of the following naming convention:
+# The buttons have an id in the html hat is the button text
+# in lowercase followed by '-btn' so the Clear button has an id of
+# id='clear-btn'. That allows us to lowercase the name and add '-btn'
+# to get the element id of any button
+##################################################################
 
 
 @when('I press the "{button}" button')
@@ -90,159 +118,95 @@ def step_impl(context, button):
     context.driver.find_element(By.ID, button_id).click()
 
 
-@when('I press the "{button_class}" button for the "{position}" order')
-def step_impl(context, button_class, position):
-    button_class = button_class.lower().replace(" ", "-") + "-btn"
-    orders_container = context.driver.find_element(By.ID, "ordersContainer")
-    orders = orders_container.find_elements(By.CLASS_NAME, "order")
-
-    if position not in position_mapping:
-        raise ValueError(f"Unsupported position '{position}'")
-
-    order_index = position_mapping[position]
-
-    if order_index >= len(orders):
-        raise AssertionError(
-            f"There are only {len(orders)} orders, but tried to access the {position} order."
+@then('I should see "{name}" in the results')
+def step_impl(context, name):
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, "search_results"), name
         )
-
-    order_to_click = orders[order_index]
-
-    target_button = order_to_click.find_element(By.CLASS_NAME, button_class)
-    target_button.click()
+    )
+    assert found
 
 
-@then('I should see "{expected_value}" in the "{field_name}" field')
-def step_impl(context, expected_value, field_name):
-    field_value = None
-    if field_name == "Customer Name":
-        modal = context.driver.find_element(By.ID, "orderModal")
-        field_value = modal.find_element(By.ID, "customerInput").get_attribute("value")
-    elif field_name == "Status":
-        modal = context.driver.find_element(By.ID, "orderModal")
-        field_value = modal.find_element(By.ID, "statusInput").get_attribute("value")
-    elif field_name == "Item Name":
-        modal = context.driver.find_element(By.ID, "itemModal")
-        field_value = modal.find_element(By.ID, "itemNameInput").get_attribute("value")
-    elif field_name == "Quantity":
-        modal = context.driver.find_element(By.ID, "itemModal")
-        field_value = modal.find_element(By.ID, "itemQuantityInput").get_attribute(
-            "value"
+@then('I should not see "{name}" in the results')
+def step_impl(context, name):
+    element = context.driver.find_element(By.ID, "search_results")
+    assert name not in element.text
+
+
+@then('I should see the message "{message}"')
+def step_impl(context, message):
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, "flash_message"), message
         )
-    elif field_name == "Price":
-        modal = context.driver.find_element(By.ID, "itemModal")
-        field_value = modal.find_element(By.ID, "itemPriceInput").get_attribute("value")
+    )
+    assert found
+
+
+##################################################################
+# This code works because of the following naming convention:
+# The id field for text input in the html is the element name
+# prefixed by ID_PREFIX so the Name field has an id='pet_name'
+# We can then lowercase the name and prefix with pet_ to get the id
+##################################################################
+
+
+@then('I should see "{text_string}" in the "{element_name}" field')
+def step_impl(context, text_string, element_name):
+    element_id = element_name.lower().replace(" ", "_")
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element_value(
+            (By.ID, element_id), text_string
+        )
+    )
+    assert found
+
+
+@when('I change "{element_name}" to "{text_string}"')
+def step_impl(context, element_name, text_string):
+    element_id = element_name.lower().replace(" ", "_")
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
+    element.clear()
+    element.send_keys(text_string)
+
+
+@then('I should not see the copied "{element_name}" in results')
+def step_impl(context, element_name):
+    element = context.driver.find_element(By.ID, "search_results")
     assert (
-        expected_value == field_value
-    ), f"Expected to see '{expected_value}' in the '{field_name}' field, but found '{field_value}'."
+        context.clipboard not in element.text
+    ), f"The {element_name} '{context.clipboard}' was found in the search results, but it should not be there."
+    print(
+        f"Success: The {element_name} '{context.clipboard}' is not present in the search results as expected."
+    )
 
 
-@when('I set the "{field_name}" to "{new_value}"')
-def step_impl(context, field_name, new_value):
+@when('I leave the "{element_name}" field empty')
+def step_impl(context, element_name):
+    element_id = element_name.lower().replace(" ", "_")
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
+    element.clear()
 
-    if field_name == "Customer Name":
-        modal = context.driver.find_element(By.ID, "orderModal")
-        customer_input = modal.find_element(By.ID, "customerInput")
-        customer_input.clear()
-        customer_input.send_keys(new_value)
-
-    elif field_name == "Status":
-        modal = context.driver.find_element(By.ID, "orderModal")
-        status_input = modal.find_element(By.ID, "statusInput")
-        for option in status_input.find_elements(By.TAG_NAME, "option"):
-            if option.get_attribute("value") == new_value:
-                option.click()
-                break
-        else:
-            raise ValueError(f"Status '{new_value}' not found in dropdown.")
-
-    elif field_name == "Price":
-        modal = context.driver.find_element(By.ID, "itemModal")
-        price_input = modal.find_element(By.ID, "itemPriceInput")
-        price_input.clear()
-        price_input.send_keys(new_value)
-
-    elif field_name == "filter-customer-name":
-        modal = context.driver.find_element(By.ID, "filterModal")
-        filter_customer_name = modal.find_element(By.ID, "filter-customer-name")
-        filter_customer_name.clear()
-        filter_customer_name.send_keys(new_value)
-    elif field_name == "filter-order-status":
-        modal = context.driver.find_element(By.ID, "filterModal")
-        filter_order_status = modal.find_element(By.ID, "filter-order-status")
-        filter_order_status.clear()
-        filter_order_status.send_keys(new_value)
-
-    elif field_name == "filter-product-name":
-        modal = context.driver.find_element(By.ID, "filterModal")
-        filter_product_name = modal.find_element(By.ID, "filter-product-name")
-        filter_product_name.clear()
-        filter_product_name.send_keys(new_value)
-
-    else:
-        raise ValueError(f"Field '{field_name}' not supported.")
-
-    print(f"Successfully set '{field_name}' to '{new_value}'.")
-
-
-@when('I clear the "{field_name}" field')
-def step_impl(context, field_name):
-    modal = context.driver.find_element(By.ID, "filterModal")
-    field = modal.find_element(By.ID, field_name)
-    field.clear()
-
-
-@then('I should see "{expected_count}" items in the "{position}" Order')
-def step_impl(context, expected_count, position):
-    orders_container = context.driver.find_element(By.ID, "ordersContainer")
-    orders = orders_container.find_elements(By.CLASS_NAME, "order")
-
-    if position not in position_mapping:
-        raise ValueError(f"Unsupported position '{position}'")
-
-    order_index = position_mapping[position]
-
-    if order_index >= len(orders):
-        raise AssertionError(
-            f"There are only {len(orders)} orders, but tried to access the {position} order."
+@then('I should see the message "{message}" in the item form')
+def step_impl(context, message):
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, "flash_message_item"), message
         )
+    )
+    assert found
 
-    target_order = orders[order_index]
-    item_list = target_order.find_element(By.CLASS_NAME, "item-list")
-    items = item_list.find_elements(By.CLASS_NAME, "item")
-
-    actual_count = len(items)
-    assert actual_count == int(
-        expected_count
-    ), f"Expected to see {expected_count} items, but found {actual_count}."
-
-
-@when('I press the "{item_position}" item in the "{order_position}" Order')
-def step_impl(context, item_position, order_position):
-    orders_container = context.driver.find_element(By.ID, "ordersContainer")
-    orders = orders_container.find_elements(By.CLASS_NAME, "order")
-
-    if order_position not in position_mapping:
-        raise ValueError(f"Unsupported order position '{order_position}'")
-    order_index = position_mapping[order_position]
-
-    if order_index >= len(orders):
-        raise AssertionError(
-            f"There are only {len(orders)} orders, but tried to access the {order_position} order."
-        )
-
-    target_order = orders[order_index]
-    item_list = target_order.find_element(By.CLASS_NAME, "item-list")
-    items = item_list.find_elements(By.CLASS_NAME, "item")
-
-    if item_position not in position_mapping:
-        raise ValueError(f"Unsupported item position '{item_position}'")
-    item_index = position_mapping[item_position]
-
-    if item_index >= len(items):
-        raise AssertionError(
-            f"There are only {len(items)} items, but tried to access the {item_position} item."
-        )
-
-    target_item = items[item_index]
-    target_item.click()
+@then('I should not see the copied "{element_name}" in item search results')
+def step_impl(context, element_name):
+    element = context.driver.find_element(By.ID, "search_results_item")
+    assert (
+        context.clipboard not in element.text
+    ), f"The {element_name} '{context.clipboard}' was found in the search results, but it should not be there."
+    print(
+        f"Success: The {element_name} '{context.clipboard}' is not present in the search results as expected."
+    )
