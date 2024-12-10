@@ -17,92 +17,28 @@
 """
 TestOrder API Service Test Suite
 """
-
-# pylint: disable=duplicate-code
-from datetime import datetime
-import os
+# Standard library imports
 import logging
-from unittest import TestCase
-from wsgi import app
-from service.common import status
-from service.models import db, Order
-from tests.factories import OrderFactory, ItemFactory
+from datetime import datetime
 
-DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
-)
+from service.common import status
+from tests.factories import ItemFactory
+# Local application imports
+from tests.test_base import TestBase
 
 BASE_URL = "/api/orders"
-
 
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
 
 
-class TestOrderService(TestCase):
+class TestOrderService(TestBase):
     """REST API Server Tests"""
-
-    @classmethod
-    def setUpClass(cls):
-        """Run once before all tests"""
-        app.config["TESTING"] = True
-        app.config["DEBUG"] = False
-        # Set up the test database
-        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-        app.logger.setLevel(logging.CRITICAL)
-        app.app_context().push()
-
-    @classmethod
-    def tearDownClass(cls):
-        """Run once after all tests"""
-        db.session.close()
-
-    def setUp(self):
-        """Runs before each test"""
-        self.client = app.test_client()
-        db.session.query(Order).delete()  # clean up the last tests
-        db.session.commit()
-
-    def tearDown(self):
-        """This runs after each test"""
-        db.session.remove()
-
-    ######################################################################
-    #  H E L P E R   M E T H O D S
-    ######################################################################
-
-    def _create_orders(self, count):
-        """Factory method to create orders in bulk"""
-        orders = []
-        for _ in range(count):
-            order = OrderFactory()
-            resp = self.client.post(BASE_URL, json=order.serialize())
-            self.assertEqual(
-                resp.status_code,
-                status.HTTP_201_CREATED,
-                "Could not create test Order",
-            )
-            new_order = resp.get_json()
-            order.id = new_order["id"]
-            orders.append(order)
-        return orders
 
     ######################################################################
     #  P L A C E   T E S T   C A S E S   H E R E
     ######################################################################
-
-    def test_index(self):
-        """It should call the home page"""
-        resp = self.client.get("/")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-    def test_health(self):
-        """It should get the health endpoint"""
-        resp = self.client.get("/health")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(data["status"], "OK")
 
     def test_add_item(self):
         """It should add an item to an order"""
@@ -131,7 +67,8 @@ class TestOrderService(TestCase):
         self.assertEqual(data["quantity"], item.quantity)
         self.assertEqual(float(data["price"]), float(item.price))
 
-        # No need to parse the datetime strings because it will not be returned by item_model in restx
+        # No need to parse the datetime
+        # strings because it will not be returned by item_model in restx
         # Check that the location header was correct by getting it
         resp = self.client.get(location, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -175,7 +112,8 @@ class TestOrderService(TestCase):
         self.assertEqual(data["product_name"], item.product_name)
         self.assertEqual(data["quantity"], item.quantity)
         self.assertEqual(float(data["price"]), float(item.price))
-        # No need to parse the datetime strings because it will not be returned by item_model in restx
+        # No need to parse the datetime strings because it
+        # will not be returned by item_model in restx
 
     def test_get_items_in_list(self):
         """It should Get a list of Items in an order with order_id"""

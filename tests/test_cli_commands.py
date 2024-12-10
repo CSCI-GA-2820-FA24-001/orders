@@ -18,14 +18,12 @@
 CLI Command Extensions for Flask
 """
 
-# pylint: disable=duplicate-code
 import os
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
-# pylint: disable=unused-import
-from wsgi import app  # noqa: F401
 from service.common.cli_commands import db_create  # noqa: E402
 
 

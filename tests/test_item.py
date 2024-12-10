@@ -18,52 +18,28 @@
 Test cases for Item Model
 """
 
-import logging
-import os
-from unittest import TestCase
-from wsgi import app
-from service.models import Order, Item, db, DataValidationError
-from tests.factories import OrderFactory, ItemFactory
-
-DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
-)
-
+from service.models import DataValidationError, Item, Order
+from tests.factories import ItemFactory, OrderFactory
+# Local application imports
+from tests.test_base import TestBase
 
 ######################################################################
 #        I T E M   M O D E L   T E S T   C A S E S
 ######################################################################
-# pylint: disable=duplicate-code
-class TestItem(TestCase):
-    """Item Model Test Cases"""
 
-    @classmethod
-    def setUpClass(cls):
-        """This runs once before the entire test suite"""
-        app.config["TESTING"] = True
-        app.config["DEBUG"] = False
-        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-        app.logger.setLevel(logging.CRITICAL)
-        app.app_context().push()
 
-    @classmethod
-    def tearDownClass(cls):
-        """This runs once after the entire test suite"""
-        db.session.close()
+######################################################################
+#  T E S T   C A S E S
+######################################################################
 
-    def setUp(self):
-        """This runs before each test"""
-        db.session.query(Order).delete()  # clean up the last tests
-        db.session.query(Item).delete()  # clean up the last tests
-        db.session.commit()
 
-    def tearDown(self):
-        """This runs after each test"""
-        db.session.remove()
+class TestItem(TestBase):
+    """Test suite for the Item model.
 
-    ######################################################################
-    #  T E S T   C A S E S
-    ######################################################################
+    This class contains unit tests that verify the functionality
+    of the Item model, including creation, serialization,
+    deserialization, and other core operations.
+    """
 
     def test_add_order_item(self):
         """It should Create an order with an item and add it to the database"""

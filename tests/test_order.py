@@ -18,49 +18,19 @@
 Test cases for Order Model
 """
 
-import logging
-import os
-from unittest import TestCase
 from unittest.mock import patch
-from wsgi import app
-from service.models import Order, Item, DataValidationError, db, OrderStatus
-from tests.factories import OrderFactory, ItemFactory
 
-DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
-)
+from service.models import DataValidationError, Item, Order, OrderStatus
+from tests.factories import ItemFactory, OrderFactory
+from tests.test_base import TestBase
 
 
 ######################################################################
 #        O R D E R   M O D E L   T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
-class TestOrder(TestCase):
+class TestOrder(TestBase):
     """Order Model Test Cases"""
-
-    @classmethod
-    def setUpClass(cls):
-        """This runs once before the entire test suite"""
-        app.config["TESTING"] = True
-        app.config["DEBUG"] = False
-        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-        app.logger.setLevel(logging.CRITICAL)
-        app.app_context().push()
-
-    @classmethod
-    def tearDownClass(cls):
-        """This runs once after the entire test suite"""
-        db.session.close()
-
-    def setUp(self):
-        """This runs before each test"""
-        db.session.query(Order).delete()  # clean up the last tests
-        db.session.query(Item).delete()  # clean up the last tests
-        db.session.commit()
-
-    def tearDown(self):
-        """This runs after each test"""
-        db.session.remove()
 
     ######################################################################
     #  T E S T   C A S E S
@@ -88,7 +58,8 @@ class TestOrder(TestCase):
         self.assertEqual(len(order.items), len(fake_order.items))
 
     def test_create_an_order_with_default_status(self):
-        """It should Create an Order without status set and assert that the status is set to the default value"""
+        """It should Create an Order without status
+        which is set and assert that the status is set to the default value"""
         fake_order = OrderFactory()
         # pylint: disable=unexpected-keyword-arg
         order = Order(

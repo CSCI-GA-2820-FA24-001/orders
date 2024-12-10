@@ -3,9 +3,11 @@ Defined tests for persistent base
 """
 
 from unittest.mock import patch
+
 import pytest
-from service.models import PersistentBase
+
 from service.common.error_handlers import DataValidationError
+from service.models import PersistentBase
 
 
 def test_update_raises_exception():
