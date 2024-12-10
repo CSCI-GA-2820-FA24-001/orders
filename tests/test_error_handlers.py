@@ -2,8 +2,8 @@
 Defining error handlers
 """
 
-from tests.test_base import TestBase
 from service.common import status
+from tests.test_base import TestBase
 
 BASE_URL = "/api/orders"
 

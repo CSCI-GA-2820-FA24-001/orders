@@ -20,10 +20,10 @@ TestOrder API Service Test Suite
 
 import logging
 
-from tests.test_base import TestBase
 from service.common import status
 from service.models import OrderStatus
-from tests.factories import OrderFactory, ItemFactory
+from tests.factories import ItemFactory, OrderFactory
+from tests.test_base import TestBase
 
 BASE_URL = "/api/orders"
 

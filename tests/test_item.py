@@ -18,11 +18,10 @@
 Test cases for Item Model
 """
 
+from service.models import DataValidationError, Item, Order
+from tests.factories import ItemFactory, OrderFactory
 # Local application imports
 from tests.test_base import TestBase
-from service.models import Order, Item, DataValidationError
-from tests.factories import ItemFactory, OrderFactory
-
 
 ######################################################################
 #        I T E M   M O D E L   T E S T   C A S E S

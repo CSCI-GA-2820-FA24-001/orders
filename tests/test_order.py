@@ -20,9 +20,9 @@ Test cases for Order Model
 
 from unittest.mock import patch
 
+from service.models import DataValidationError, Item, Order, OrderStatus
+from tests.factories import ItemFactory, OrderFactory
 from tests.test_base import TestBase
-from service.models import Order, Item, DataValidationError, OrderStatus
-from tests.factories import OrderFactory, ItemFactory
 
 
 ######################################################################

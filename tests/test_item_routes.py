@@ -21,10 +21,10 @@ TestOrder API Service Test Suite
 import logging
 from datetime import datetime
 
-# Local application imports
-from tests.test_base import TestBase
 from service.common import status
 from tests.factories import ItemFactory
+# Local application imports
+from tests.test_base import TestBase
 
 BASE_URL = "/api/orders"
 

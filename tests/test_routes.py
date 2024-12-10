@@ -20,9 +20,9 @@ TestOrder API Service Test Suite
 
 from factory import Faker
 
-from tests.test_base import TestBase
 from service.common import status
 from tests.factories import OrderFactory
+from tests.test_base import TestBase
 
 BASE_URL = "/api/orders"
 

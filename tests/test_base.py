@@ -5,10 +5,11 @@ Base Test Case for Order Service Test Suite
 import logging
 import os
 from unittest import TestCase
-from wsgi import app
+
 from service.common import status
-from service.models import db, Order, Item
+from service.models import Item, Order, db
 from tests.factories import OrderFactory
+from wsgi import app
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
