@@ -1,218 +1,76 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Order Demo RESTful Service</title>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/x-icon" href="static/images/newapp-icon.png">
-    <link rel="stylesheet" href="static/css/cerulean_bootstrap.min.css">
-  </head>
-  <body>
-    <div class="container">
-      <div class="page-header">
-          <h1>Order Demo REST API Service</h1>
-      </div>
-
-      <!-- Flash Message -->
-      <div class="table-responsive">
-        <table class="table">
-          <tr><td>Status:</td><td><span id="flash_message"></span></td></tr>
-        </table>
-      </div>
-
-      <!-- FORM -->
-      <div class="col-md-12" id="form_data">
-        <h3>Create, Retrieve, Update, and Delete an Order:</h3>
-        <div class="well">
-          <div class="form-horizontal">
-            <div class="form-group">
-              <label class="control-label col-sm-2" for="order_id">Order ID:</label>
-              <div class="col-sm-6">
-                <input type="text" class="form-control" id="order_id" placeholder="Enter ID of Order">
-              </div>
-              <div class="col-sm-4">
-                <button type="submit" class="btn btn-primary" id="retrieve-btn">Retrieve</button>
-                <button type="submit" class="btn btn-danger" id="delete-btn">Delete</button>
-              </div>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Demo RESTful Service</title>
+  <link rel="stylesheet" href="static/css/styles.css">
+</head>
+<body>
+    <div class="modal-overlay" id="itemModal">
+        <div class="modal">
+            <h3>Edit Item</h3>
+            <label for="itemNameInput">Item Name</label>
+            <input type="text" id="itemNameInput" />
+        
+            <label for="itemQuantityInput">Quantity</label>
+            <input type="number" id="itemQuantityInput" />
+        
+            <label for="itemPriceInput">Price</label>
+            <input type="number" step="0.01" id="itemPriceInput" />
+        
+            <div class="modal-buttons">
+                <button class="cancel" id="cancel-item-btn">Cancel</button>
+                <button class="delete" id="delete-item-btn">Delete Item</button>
+                <button class="save" id="save-item-btn">Save</button>
             </div>
-          </div>
-
-          <div class="form-horizontal">
-            <!-- Customer Name -->
-            <div class="form-group">
-              <label class="control-label col-sm-2" for="order_customer_name">Customer Name:</label>
-              <div class="col-sm-10">
-                <input type="text" class="form-control" id="order_customer_name" placeholder="Enter customer name">
-              </div>
-            </div>
-
-            <!-- Status -->
-            <div class="form-group">
-              <label class="control-label col-sm-2" for="order_status">Status:</label>
-              <div class="col-sm-10">
-                <select class="form-control" id="order_status">
-                  <option value="CREATED" selected>CREATED</option>
-                  <option value="IN_PROGRESS">IN_PROGRESS</option>
-                  <option value="SHIPPED">SHIPPED</option>
-                  <option value="COMPLETED">COMPLETED</option>
-                  <option value="CANCELLED">CANCELLED</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Product Name -->
-            <div class="form-group">
-              <label class="control-label col-sm-2" for="order_product_name">Product Name:</label>
-              <div class="col-sm-10">
-                <input type="text" class="form-control" id="order_product_name" placeholder="Enter product name">
-              </div>
-            </div>
-
-            <!-- Quantity -->
-            <div class="form-group">
-              <label class="control-label col-sm-2" for="order_quantity">Quantity:</label>
-              <div class="col-sm-10">
-                <input type="number" class="form-control" id="order_quantity" placeholder="Enter quantity">
-              </div>
-            </div>
-
-            <!-- Price -->
-            <div class="form-group">
-              <label class="control-label col-sm-2" for="order_price">Price:</label>
-              <div class="col-sm-10">
-                <input type="number" step="0.01" class="form-control" id="order_price" placeholder="Enter price">
-              </div>
-            </div>
-
-            <!-- SUBMIT BUTTONS -->
-            <div class="form-group">
-              <div class="col-sm-offset-2 col-sm-10">
-                <button type="submit" class="btn btn-primary" id="search-btn">Search</button>
-                <button type="submit" class="btn btn-primary" id="clear-btn">Clear</button>
-                <button type="submit" class="btn btn-success" id="create-btn">Create</button>
-                <button type="submit" class="btn btn-warning" id="update-btn">Update</button>
-                <button type="submit" class="btn btn-danger" id="cancel-btn">Cancel</button>
-              </div>
-            </div>
+        </div>
+    </div> 
+    
+    <div class="modal-overlay"  id="orderModal">
+        <div class="modal">
+          <h3>Edit Order Info</h3>
+          <label for="customerInput">Customer Name</label>
+          <input type="text" id="customerInput" />
+      
+          <label for="statusInput">Status</label>
+            <select id="statusInput">
+            <option value="CREATED">CREATED</option>
+            <option value="IN_PROGRESS">IN_PROGRESS</option>
+            <option value="SHIPPED">SHIPPED</option>
+            <option value="COMPLETED">COMPLETED</option>
+            <option value="CANCELLED">CANCELLED</option>
+            </select>
+      
+          <div class="modal-buttons">
+            <button class="cancel" id="cancel-order-btn">Cancel</button>
+            <button class="save" id="save-order-btn">Save</button>
           </div>
         </div>
       </div>
-
-      <!-- Search Results -->
-      <div class="table-responsive col-md-12" id="search_results">
-        <table class="table table-striped">
-          <thead>
-          <tr>
-            <th class="col-md-1">ID</th>
-            <th class="col-md-2">Customer Name</th>
-            <th class="col-md-2">Status</th>
-            <th class="col-md-2">Product Name</th>
-            <th class="col-md-2">Quantity</th>
-            <th class="col-md-2">Price</th>
-          </tr>
-          </thead>
-        </table>
-      </div>
-
-    <div class="container">
-      <div class="page-header">
-          <h1>Items in Order Demo Subordinate REST API Service</h1>
-      </div>
-
-      <!-- Flash Message -->
-      <div class="table-responsive">
-        <table class="table">
-          <tr><td>Status:</td><td><span id="flash_message_item"></span></td></tr>
-        </table>
-      </div>
-
-    <!-- ITEM FORM -->
-    <div class="col-md-12" id="form_data">
-      <h3>Create, Retrieve, Update, and Delete an Item in an Order:</h3>
-      <div class="well">
-        <div class="form-horizontal">
-          <div class="form-group">
-            <label class="control-label col-sm-2" for="order_id_item">Order ID:</label>
-            <div class="col-sm-10">
-              <input type="text" class="form-control" id="order_id_item" placeholder="Enter ID of Order">
-            </div>
-          </div>
-        </div>
-
-        <div class="form-horizontal">
-          <!-- Item Id -->
-          <div class="form-group">
-            <label class="control-label col-sm-2" for="item_id">Item ID:</label>
-            <div class="col-sm-6">
-              <input type="text" class="form-control" id="item_id" placeholder="Enter item id">
-            </div>
-            <div class="col-sm-4">
-              <button type="submit" class="btn btn-primary" id="retrieve-item-btn">Retrieve item</button>
-            </div>
-          </div>
-
-        <div class="form-horizontal">
-          <!-- Product Name -->
-          <div class="form-group">
-            <label class="control-label col-sm-2" for="item_product_name">Product Name:</label>
-            <div class="col-sm-10">
-              <input type="text" class="form-control" id="item_product_name" placeholder="Enter product name">
-            </div>
-          </div>
-
-          <!-- Quantity -->
-          <div class="form-group">
-            <label class="control-label col-sm-2" for="item_quantity">Quantity:</label>
-            <div class="col-sm-10">
-              <input type="number" class="form-control" id="item_quantity" placeholder="Enter quantity">
-            </div>
-          </div>
-
-          <!-- Price -->
-          <div class="form-group">
-            <label class="control-label col-sm-2" for="item_price">Price:</label>
-            <div class="col-sm-10">
-              <input type="number" step="0.01" class="form-control" id="item_price" placeholder="Enter price">
-            </div>
-          </div>
-
-          <!-- SUBMIT BUTTONS -->
-          <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10">
-              <button type="submit" class="btn btn-primary" id="search-item-btn">Search Items</button>
-              <button type="submit" class="btn btn-primary" id="clear-item-btn">Clear Item</button>
-              <button type="submit" class="btn btn-success" id="create-item-btn">Create Item</button>
-              <button type="submit" class="btn btn-warning" id="update-item-btn">Update Item</button>
-              <button type="submit" class="btn btn-danger" id="delete-item-btn">Delete Item</button>
-            </div>
-          </div>
-        </div>
+      
+      
+  <div class="page-container">
+    <header>
+      <h1>Order Demo REST API Service</h1>
+      <hr>
+    </header>
+    <div class="filter-container", id="filterModal">
+        <input type="text" id="filter-customer-name" placeholder="Customer Name">
+        <input type="text" id="filter-order-status" placeholder="Order Status">
+        <input type="text" id="filter-product-name" placeholder="Product Name">
+        <button id="filter-btn" onclick="filterOrders()">Filter</button>
+    </div>
+    <div class="list-container">
+      <div class="orders-container" id="ordersContainer">
+        <button class="new-order" onclick="addOrder()" id="new-order-btn">New Order</button>
       </div>
     </div>
-
-    <!-- Search Results -->
-    <div class="table-responsive col-md-12" id="search_results_item">
-      <table class="table table-striped">
-        <thead>
-        <tr>
-          <th class="col-md-1">Item ID</th>
-          <th class="col-md-2">Product Name</th>
-          <th class="col-md-2">Quantity</th>
-          <th class="col-md-2">Price</th>
-        </tr>
-        </thead>
-      </table>
-    </div>
-
     <footer>
-      <br><br>
-      <p>&copy; NYU DevOps Company 2024</p>
+        <p>&copy; NYU DevOps Company 2024</p>
     </footer>
   </div>
-
-    <script type="text/javascript" src="static/js/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="static/js/rest_api.js"></script>
-  </body>
+  <script type="text/javascript" src="static/js/jquery-3.6.0.min.js"></script>
+  <script src="static/js/rest_api.js"></script>
+</body>
 </html>

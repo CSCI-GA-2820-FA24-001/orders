@@ -15,229 +15,104 @@ Scenario: The server is running
     Then I should see "Order Demo RESTful Service" in the title
     And I should not see "404 Not Found"
 
-# TODO  delete also automatically shows Cancelled order?
-Scenario: Delete an Order
-    When I visit the "Home Page"
-    And I press the "Clear" button
-    And I press the "Search" button
-    Then I should see the message "Success"
-    When I copy the "Order ID" field
-    And I press the "Clear" button
-    And I paste the "Order ID" field
-    And I press the "Retrieve" button
-    Then I should see the message "Success"
-    And I should see "John Doe" in the "Order Customer Name" field
-    And I should see "CREATED" in the "Order Status" field
-    And I should see "Device" in the "Order Product Name" field
-    And I should see "499.99" in the "Order Price" field
-    When I press the "Delete" button
-    Then I should see the message "Order has been Deleted!"
-    When I press the "Clear" button
-    And I press the "Search" button
-    Then I should not see the copied "Order ID" in results
-
 Scenario: List all Orders
     When I visit the "Home Page"
-    And I press the "Clear" button
-    And I press the "Search" button
-    Then I should see the message "Success"
-    And I should see "Jane Smith" in the results
-    And I should see "Bob Wilson" in the results
+    Then I should see "3" orders
 
 Scenario: Create an Order
     When I visit the "Home Page"
-    And I set the "Order Customer Name" to "John Doe"
-    And I select "CREATED" in the "Order Status" dropdown
-    And I set the "Order Product Name" to "Device"
-    And I set the "Order Quantity" to "2"
-    And I set the "Order Price" to "499.99"
-    And I press the "Create" button
-    Then I should see the message "Success"
-    When I copy the "Order ID" field
-    And I press the "Clear" button
-    And I paste the "Order ID" field
-    And I press the "Retrieve" button
-    Then I should see the message "Success"
-    And I should see "John Doe" in the "Order Customer Name" field
-    And I should see "CREATED" in the "Order Status" field
-    And I should see "Device" in the "Order Product Name" field
-    And I should see "2" in the "Order Quantity" field 
-    And I should see "499.99" in the "Order Price" field
+    And I press the "New Order" button
+    Then I should see "4" orders
+
+Scenario: Delete an Order
+    When I visit the "Home Page"
+    And I press the "Delete Order" button for the "First" order
+    Then I should see "2" orders
 
 Scenario: Update an Order
     When I visit the "Home Page"
-    And I press the "Clear" button
-    And I press the "Search" button
-    Then I should see the message "Success"
-    When I copy the "Order ID" field
-    And I press the "Clear" button
-    And I paste the "Order ID" field
-    And I press the "Retrieve" button
-    Then I should see the message "Success"
-    When I set the "Order Customer Name" to "Jane Doe"
-    And I press the "Update" button
-    Then I should see the message "Success"
-    When I press the "Clear" button
-    And I paste the "Order ID" field
-    And I press the "Retrieve" button
-    Then I should see the message "Success"
-    And I should see "Jane Doe" in the "Order Customer Name" field
-
-Scenario: Query Orders by Various Criteria
-    When I visit the "Home Page"
-    And I press the "Clear" button
-    # Test filtering by Order Customer Name
-    When I set the "Order Customer Name" to "John Doe"
-    And I press the "Search" button
-    Then I should see the message "Success"
-    And I should see "John Doe" in the results
-    And I should not see "Jane Smith" in the results
-    And I should not see "Bob Wilson" in the results
-    
-    # Test filtering by Order Status
-    When I press the "Clear" button
-    And I select "SHIPPED" in the "Order Status" dropdown
-    And I press the "Search" button
-    Then I should see the message "Success"
-    And I should see "Jane Smith" in the results
-    And I should not see "John Doe" in the results
-    And I should not see "Bob Wilson" in the results
-    
-    # Test filtering by Order Product Name
-    When I press the "Clear" button
-    And I set the "Order Product Name" to "Laptop"
-    And I press the "Search" button
-    Then I should see the message "Success"
-    And I should see "Bob Wilson" in the results
-    And I should not see "John Doe" in the results
-    And I should not see "Jane Smith" in the results
-    
-    # Test combined filters
-    When I press the "Clear" button
-    And I set the "Order Customer Name" to "Bob Wilson"
-    And I select "CANCELLED" in the "Order Status" dropdown
-    And I press the "Search" button
-    Then I should see the message "Success"
-    And I should see "Bob Wilson" in the results
-    And I should see "CANCELLED" in the results
-    And I should not see "John Doe" in the results
-    And I should not see "Jane Smith" in the results
+    Then I should see "3" orders
+    When I press the "Order Info" button for the "First" order
+    Then I should see "John Doe" in the "Customer Name" field
+    When I set the "Customer Name" to "Jane Doe"
+    And I press the "Save Order" button
+    When I press the "Order Info" button for the "First" order
+    Then I should see "Jane Doe" in the "Customer Name" field
 
 Scenario: Cancel an Order
     When I visit the "Home Page"
-    And I press the "Clear" button
-    And I press the "Search" button
-    Then I should see the message "Success"
-    When I copy the "Order ID" field
-    And I press the "Clear" button
-    And I paste the "Order ID" field
-    And I press the "Retrieve" button
-    Then I should see the message "Success"
-    And I should see "John Doe" in the "Order Customer Name" field
-    And I should see "CREATED" in the "Order Status" field
-    When I press the "Cancel" button
-    Then I should see the message "Success"
-    And I should see "CANCELLED" in the "Order Status" field
-    # Verify the order remains cancelled after refresh
-    When I press the "Clear" button
-    And I paste the "Order ID" field
-    And I press the "Retrieve" button
-    Then I should see the message "Success"
-    And I should see "CANCELLED" in the "Order Status" field
+    Then I should see "3" orders
+    When I press the "Order Info" button for the "First" order
+    Then I should see "CREATED" in the "Status" field
+    When I set the "Status" to "CANCELLED"
+    And I press the "Save Order" button
+    When I press the "Order Info" button for the "First" Order
+    Then I should see "CANCELLED" in the "Status" field
 
-Scenario: Read an Item
-    When I visit the "Home Page"
-    And I press the "Clear" button
-    And I press the "Search" button
-    Then I should see the message "Success"
-    When I copy the "Order ID" field
-    And I paste the "Order ID Item" field 
-    And I press the "Search Item" button
-    Then I should see the message "Success"
-    When I leave the "Item Product Name" field empty
-    And I leave the "Item Quantity" field empty
-    And I leave the "Item Price" field empty
-    And I press the "Retrieve Item" button
-    Then I should see the message "Success" in the item form
-    And I should see "Device" in the "Item Product Name" field
-    And I should see "2" in the "Item Quantity" field
-    And I should see "499.99" in the "Item Price" field
-
-Scenario: Delete an Item
-    When I visit the "Home Page"
-    And I press the "Clear" button
-    And I press the "Search" button
-    Then I should see the message "Success"
-    When I copy the "Order ID" field
-    And I paste the "Order ID Item" field 
-    And I press the "Search Item" button
-    Then I should see the message "Success"
-    And I should see "Device" in the "Item Product Name" field
-    And I should see "2" in the "Item Quantity" field
-    And I should see "499.99" in the "Item Price" field
-    When I copy the "Item ID" field
-    And I leave the "Item Product Name" field empty
-    And I leave the "Item Quantity" field empty
-    And I leave the "Item Price" field empty
-    And I press the "Delete Item" button
-    Then I should see the message "Item has been Deleted!" in the item form
-
-Scenario: Update an Item
-    When I visit the "Home Page"
-    And I press the "Clear" button
-    And I press the "Search" button
-    Then I should see the message "Success"
-    When I copy the "Order ID" field
-    And I paste the "Order ID Item" field 
-    And I press the "Search Item" button
-    Then I should see the message "Success"
-    Then I should see "499.99" in the "Item Price" field
-    When I set the "Item Price" to "600.00"
-    And I press the "Update Item" button
-    Then I should see the message "Success"
-    When I copy the "Item ID" field
-    And I press the "Clear Item" button
-    And I paste the "Item ID" field
-    And I copy the "Order ID" field
-    And I paste the "Order ID Item" field
-    And I press the "Retrieve Item" button
-    Then I should see "600" in the "Item Price" field
-
-Scenario: Read an Order
-    When I visit the "Home Page"
-    And I press the "Clear" button
-    And I press the "Search" button
-    Then I should see the message "Success"
-    When I copy the "Order ID" field
-    And I press the "Clear" button
-    And I paste the "Order ID" field
-    And I press the "Retrieve" button
-    Then I should see the message "Success"
-    And I should see "John Doe" in the "Order Customer Name" field
-    And I should see "CREATED" in the "Order Status" field
-    And I should see "Device" in the "Order Product Name" field
-    And I should see "2" in the "Order Quantity" field
-    And I should see "499.99" in the "Order Price" field
 
 Scenario: Create an Item
     When I visit the "Home Page"
-    And I press the "Clear" button
-    And I press the "Search" button
-    Then I should see the message "Success"
-    When I copy the "Order ID" field
-    And I paste the "Order ID Item" field
-    Then I should see the message "Success"
-    When I set the "Item ID" to "100"
-    And I set the "Item Product Name" to "Apple"
-    And I set the "Item Quantity" to "2"
-    And I set the "Item Price" to "5.22"
-    And I press the "Create Item" button
-    Then I should see the message "Success"
-    #Verify that the item has been created
-    When I leave the "Item Product Name" field empty
-    And I leave the "Item Quantity" field empty
-    And I leave the "Item Price" field empty
-    And I press the "Retrieve Item" button
-    Then I should see "Apple" in the "Item Product Name" field
-    And I should see "2" in the "Item Quantity" field
-    And I should see "5.22" in the "Item Price" field
+    And I press the "Add Item" button for the "First" order
+    Then I should see "2" items in the "First" order
+
+Scenario: Read an Item
+    When I visit the "Home Page"
+    Then I should see "3" orders
+    When I press the "First" item in the "First" order
+    Then I should see "Device" in the "Item Name" field 
+    And I should see "2" in the "Quantity" field
+    And I should see "499.99" in the "Price" field
+
+Scenario: Delete an Item
+    When I visit the "Home Page"
+    And I press the "Add Item" button for the "First" order
+    Then I should see "2" items in the "First" order
+    When I press the "First" item in the "First" order
+    Then I should see "Device" in the "Item Name" field 
+    When I press the "Delete Item" button
+    Then I should see "1" items in the "First" order
+
+
+Scenario: Update an Item
+    When I visit the "Home Page"
+    When I press the "First" item in the "First" order
+    Then I should see "Device" in the "Item Name" field 
+    When I set the "Price" to "600.00"
+    And I press the "Save Item" button
+    When I press the "First" item in the "First" order
+    Then I should see "600" in the "Price" field
+
+
+Scenario: Query Orders by Various Criteria
+    When I visit the "Home Page"
+
+    # Test filtering by Order Customer Name
+    When I set the "filter-customer-name" to "John Doe"
+    And I press the "Filter" button
+    Then I should see "1" orders
+    
+    # Test filtering by Order Status
+    When I clear the "filter-customer-name" field
+    And I press the "Filter" button
+    Then I should see "3" orders
+    When I set the "filter-order-status" to "SHIPPED"
+    And I press the "Filter" button
+    Then I should see "1" orders
+
+    
+    # Test filtering by Order Product Name
+    When I clear the "filter-order-status" field
+    And I press the "Filter" button
+    Then I should see "3" orders
+    When I set the "filter-product-name" to "Laptop"
+    And I press the "Filter" button
+    Then I should see "1" orders
+    
+    # Test combined filters
+    When I clear the "filter-product-name" field
+    And I press the "Filter" button
+    Then I should see "3" orders
+    When I set the "filter-product-name" to "Laptop"
+    And I set the "filter-customer-name" to "Bob Wilson"
+    And I press the "Filter" button
+    Then I should see "1" orders
