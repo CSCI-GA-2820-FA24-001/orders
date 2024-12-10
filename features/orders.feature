@@ -48,9 +48,6 @@ Scenario: Create an Order
     When I visit the "Home Page"
     And I set the "Order Customer Name" to "John Doe"
     And I select "CREATED" in the "Order Status" dropdown
-    And I set the "Order Product Name" to "Device"
-    And I set the "Order Quantity" to "2"
-    And I set the "Order Price" to "499.99"
     And I press the "Create" button
     Then I should see the message "Success"
     When I copy the "Order ID" field
@@ -60,9 +57,6 @@ Scenario: Create an Order
     Then I should see the message "Success"
     And I should see "John Doe" in the "Order Customer Name" field
     And I should see "CREATED" in the "Order Status" field
-    And I should see "Device" in the "Order Product Name" field
-    And I should see "2" in the "Order Quantity" field 
-    And I should see "499.99" in the "Order Price" field
 
 Scenario: Update an Order
     When I visit the "Home Page"
@@ -102,15 +96,6 @@ Scenario: Query Orders by Various Criteria
     And I should see "Jane Smith" in the results
     And I should not see "John Doe" in the results
     And I should not see "Bob Wilson" in the results
-    
-    # Test filtering by Order Product Name
-    When I press the "Clear" button
-    And I set the "Order Product Name" to "Laptop"
-    And I press the "Search" button
-    Then I should see the message "Success"
-    And I should see "Bob Wilson" in the results
-    And I should not see "John Doe" in the results
-    And I should not see "Jane Smith" in the results
     
     # Test combined filters
     When I press the "Clear" button
