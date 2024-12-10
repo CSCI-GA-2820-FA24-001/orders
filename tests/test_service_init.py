@@ -1,5 +1,5 @@
 """
-Initialising test service
+Initializing test service
 """
 
 from unittest.mock import patch

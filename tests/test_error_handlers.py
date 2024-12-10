@@ -2,31 +2,14 @@
 Defining error handlers
 """
 
-# pylint: disable=duplicate-code
-from unittest import TestCase
-import logging
-
-# pylint: disable=unused-import
-from wsgi import app  # noqa: F401
+from tests.test_base import TestBase
 from service.common import status
 
 BASE_URL = "/api/orders"
 
 
-class TestErrorHandler(TestCase):
+class TestErrorHandler(TestBase):
     """Error Handler Tests"""
-
-    @classmethod
-    def setUpClass(cls):
-        """Run once before all tests"""
-        app.config["TESTING"] = True
-        app.config["DEBUG"] = False
-        app.logger.setLevel(logging.CRITICAL)
-        app.app_context().push()
-
-    def setUp(self):
-        """Runs before each test"""
-        self.client = app.test_client()
 
     def test_400_bad_request(self):
         """It should return a 400 bad request error"""
