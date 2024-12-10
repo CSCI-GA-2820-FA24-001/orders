@@ -88,7 +88,8 @@ class TestOrder(TestCase):
         self.assertEqual(len(order.items), len(fake_order.items))
 
     def test_create_an_order_with_default_status(self):
-        """It should Create an Order without status set and assert that the status is set to the default value"""
+        """It should Create an Order without status
+        which is set and assert that the status is set to the default value"""
         fake_order = OrderFactory()
         # pylint: disable=unexpected-keyword-arg
         order = Order(
