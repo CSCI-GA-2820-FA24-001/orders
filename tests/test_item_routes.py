@@ -131,7 +131,8 @@ class TestOrderService(TestCase):
         self.assertEqual(data["quantity"], item.quantity)
         self.assertEqual(float(data["price"]), float(item.price))
 
-        # No need to parse the datetime strings because it will not be returned by item_model in restx
+        # No need to parse the datetime
+        # strings because it will not be returned by item_model in restx
         # Check that the location header was correct by getting it
         resp = self.client.get(location, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -175,7 +176,8 @@ class TestOrderService(TestCase):
         self.assertEqual(data["product_name"], item.product_name)
         self.assertEqual(data["quantity"], item.quantity)
         self.assertEqual(float(data["price"]), float(item.price))
-        # No need to parse the datetime strings because it will not be returned by item_model in restx
+        # No need to parse the datetime strings because it
+        # will not be returned by item_model in restx
 
     def test_get_items_in_list(self):
         """It should Get a list of Items in an order with order_id"""
